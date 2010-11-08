@@ -21,9 +21,10 @@
 
    zmod_mat.c: Matrices over (unsigned) long mod p, for p prime.
    
-   Copyright (C) 2008, William Hart.
+   Copyright (C) 2008, 2009 William Hart.
    Copyright (C) 2008, Richard Howell-Peak
-   
+   Copyright (C) 2008, Martin Albrecht <M.R.Albrecht@rhu.ac.uk> (Some Strassen code)
+
 *****************************************************************************/
 
 #include "zmod_mat.h"
@@ -50,7 +51,8 @@ void zmod_mat_init_precomp(zmod_mat_t mat, ulong p, double p_inv,
    
    // Set up the rows
    ulong * ptr = mat->ptr;
-   for (ulong i = 0; i < rows; i++, ptr += cols)
+   ulong i;
+   for (i = 0; i < rows; i++, ptr += cols)
       mat->arr[i] = ptr;
 
    mat->p = p;
@@ -67,28 +69,34 @@ void zmod_mat_clear(zmod_mat_t mat)
 
 /*******************************************************************************************
 
+   Matrix Windows
+
+*******************************************************************************************/
+
+void zmod_mat_window_init(zmod_mat_t out, zmod_mat_t mat, ulong r1, ulong c1, ulong r2, ulong c2)
+{
+   out->arr = (ulong **) flint_heap_alloc(r2 - r1);
+
+   for (ulong i = 0; i < r2 - r1; i++)
+      out->arr[i] = mat->arr[r1 + i] + c1;
+
+   out->p = mat->p;
+   out->p_inv = mat->p_inv;
+   out->rows = r2 - r1;
+   out->cols = c2 - c1;
+}
+
+void zmod_mat_window_clear(zmod_mat_t mat)
+{
+   flint_heap_free(mat->arr);
+}
+
+/*******************************************************************************************
+
    Conversions
 
 *******************************************************************************************/
 
-/*
-   Set a row to the coefficients of a polynomial, starting with the constant coefficient
-   Assumes that poly->length <= mat->cols
-*/
-void zmod_poly_to_zmod_mat_row(zmod_mat_t mat, ulong row, zmod_poly_t poly)
-{
-   ulong * r1 = mat->arr[row];
-   ulong * coeffs = poly->coeffs;
-   ulong cols = mat->cols;
-
-   long i;
-   
-   for (i = 0; i < poly->length; i++)
-      r1[i] = coeffs[i];
-   
-   for ( ; i < cols; i++)
-      r1[i] = 0L;
-}
 /*
    Set a column to the coefficients of a polynomial, starting with the constant coefficient
    Assumes that poly->length <= mat->rows
@@ -124,7 +132,8 @@ void zmod_mat_col_to_zmod_poly(zmod_poly_t poly, zmod_mat_t mat, ulong col)
    ulong * ptr;
    
    zmod_poly_fit_length(poly, rows);
-   for (ulong i = 0; i < rows; i++)
+   ulong i;
+   for (i = 0; i < rows; i++)
    {  
 	  ptr = mat->arr[i];
       poly->coeffs[i] = ptr[col];
@@ -144,7 +153,8 @@ void zmod_mat_col_to_zmod_poly_shifted(zmod_poly_t poly, zmod_mat_t mat, ulong c
    ulong * ptr;
    
    zmod_poly_fit_length(poly, rows);
-   for (ulong i = 0, j = 0; j < rows; j++)
+   ulong i, j;
+   for (i = 0, j = 0; j < rows; j++)
    {  
 	  if (shift[j]) poly->coeffs[j] = 0L;
 	  else
@@ -182,7 +192,8 @@ void zmod_mat_row_scalar_addmul_right(zmod_mat_t mat, ulong row1, ulong row2, ul
 #if FLINT_BITS == 64
    if (FLINT_BIT_COUNT(p) >= FLINT_D_BITS)
    {
-	  for (ulong i = start; i < cols; i++)
+	  ulong i;
+	  for (i = start; i < cols; i++)
       {
 	     prod = z_mulmod2_precomp(r2[i], u, p, p_inv);
 	     r1[i] = z_addmod(r1[i], prod, p);
@@ -190,7 +201,8 @@ void zmod_mat_row_scalar_addmul_right(zmod_mat_t mat, ulong row1, ulong row2, ul
    } else
 #endif
    {
-	  for (ulong i = start; i < cols; i++)
+	  ulong i;
+	  for (i = start; i < cols; i++)
       {
 	     prod = z_mulmod_precomp(r2[i], u, p, p_inv);
 	     r1[i] = z_addmod(r1[i], prod, p);
@@ -215,7 +227,8 @@ void zmod_mat_row_scalar_submul_right(zmod_mat_t mat, ulong row1, ulong row2, ul
 #if FLINT_BITS == 64
    if (FLINT_BIT_COUNT(p) >= FLINT_D_BITS)
    {
-	  for (ulong i = start; i < cols; i++)
+	  ulong i;
+	  for (i = start; i < cols; i++)
       {
 	     prod = z_mulmod2_precomp(r2[i], u, p, p_inv);
 	     r1[i] = z_submod(r1[i], prod, p);
@@ -223,7 +236,8 @@ void zmod_mat_row_scalar_submul_right(zmod_mat_t mat, ulong row1, ulong row2, ul
    } else
 #endif
    {
-	  for (ulong i = start; i < cols; i++)
+	  ulong i;
+	  for (i = start; i < cols; i++)
       {
 	     prod = z_mulmod_precomp(r2[i], u, p, p_inv);
 	     r1[i] = z_submod(r1[i], prod, p);
@@ -246,12 +260,14 @@ void zmod_mat_row_scalar_mul_right(zmod_mat_t mat, ulong row, ulong u, ulong sta
 #if FLINT_BITS == 64
    if (FLINT_BIT_COUNT(p) >= FLINT_D_BITS)
    {
-	  for (ulong i = start; i < cols; i++)
+	  ulong i;
+	  for (i = start; i < cols; i++)
 	     r1[i] = z_mulmod2_precomp(r1[i], u, p, p_inv);
    } else
 #endif
    {
-	  for (ulong i = start; i < cols; i++)
+	  ulong i;
+	  for (i = start; i < cols; i++)
 	     r1[i] = z_mulmod_precomp(r1[i], u, p, p_inv);
    }
 }
@@ -267,12 +283,14 @@ void zmod_vec_scalar_mul_range(ulong * r1, ulong * r2, ulong u, ulong p, double 
 #if FLINT_BITS == 64
    if (FLINT_BIT_COUNT(p) >= FLINT_D_BITS)
    {
-	  for (ulong i = start; i < end; i++)
+	  ulong i;
+	  for (i = start; i < end; i++)
 	     r1[i] = z_mulmod2_precomp(r2[i], u, p, p_inv);
    } else
 #endif
    {
-	  for (ulong i = start; i < end; i++)
+	  ulong i;
+	  for (i = start; i < end; i++)
 	     r1[i] = z_mulmod_precomp(r2[i], u, p, p_inv);
    }
 }
@@ -283,10 +301,26 @@ void zmod_vec_scalar_mul_range(ulong * r1, ulong * r2, ulong u, ulong p, double 
 */
 void zmod_vec_sub_range(ulong * r1, ulong * r2, ulong p, ulong start, ulong end)
 {
-   for (ulong i = start; i < end; i++)
+   ulong i;
+   for (i = start; i < end; i++)
    {
       r1[i] = z_submod(r1[i], r2[i], p);
    }
+}
+
+/*******************************************************************************************
+
+   Comparison
+
+*******************************************************************************************/
+
+int zmod_mat_equal(zmod_mat_t mat1, zmod_mat_t mat2)
+{
+   for (ulong i = 0; i < mat1->rows; i++)
+      for (ulong j = 0; j < mat1->cols; j++)
+         if (mat1->arr[i][j] != mat2->arr[i][j]) return 0;
+
+   return 1;
 }
 
 /*******************************************************************************************
@@ -306,7 +340,8 @@ void zmod_mat_print(zmod_mat_t mat)
    if (mat->cols == 0)
    {
       printf("[");
-	  for (ulong i = 0; i < mat->rows - 1; i++)
+	  ulong i;
+	  for (i = 0; i < mat->rows - 1; i++)
 	  {
 	     printf("[]\n");
 	  }
@@ -316,11 +351,13 @@ void zmod_mat_print(zmod_mat_t mat)
    
    ulong * ptr;
    printf("[");
-   for (ulong i = 0; i < mat->rows - 1; i++)
+   ulong i;
+   for (i = 0; i < mat->rows - 1; i++)
    {
       ptr = mat->arr[i];
 	  printf("[");
-	  for (ulong j = 0; j < mat->cols - 1; j++)
+	  ulong j;
+	  for (j = 0; j < mat->cols - 1; j++)
 	  {
 	     printf("%ld, ", ptr[j]);
 	  }
@@ -328,12 +365,19 @@ void zmod_mat_print(zmod_mat_t mat)
    }
    ptr = mat->arr[mat->rows - 1];
    printf("[");
-   for (ulong j = 0; j < mat->cols - 1; j++)
+   ulong j;
+   for (j = 0; j < mat->cols - 1; j++)
    {
 	  printf("%ld, ", ptr[j]);
    }
    printf("%ld]]", ptr[mat->cols - 1]);
 }
+
+/*******************************************************************************************
+
+   Reduction
+
+*******************************************************************************************/
 
 /*
    Gaussian Elimination
@@ -362,10 +406,12 @@ ulong zmod_mat_row_reduce_gauss_small(zmod_mat_t mat)
 			ulong n = zmod_mat_get_coeff_ui(mat, i, j);
 			ulong n_inv = z_invert(n, p);
 			zmod_mat_row_scalar_mul_right(mat, i, n_inv, j);
-			for (ulong lead = 1; lead < p; lead++)
+			ulong lead;
+			for (lead = 1; lead < p; lead++)
 			{
 			   zmod_vec_scalar_mul_range(temp, mat->arr[i], lead, p, p_inv, j, cols);
-			   for(ulong u = i + 1; u < rows; u++)
+			   ulong u;
+                           for (u = i + 1; u < rows; u++)
 			   {
 			      if (zmod_mat_get_coeff_ui(mat, u, j) == lead)
 			          zmod_vec_sub_range(mat->arr[u], temp, p, j, cols);
@@ -408,7 +454,8 @@ ulong zmod_mat_row_reduce_gauss(zmod_mat_t mat)
 			ulong n = zmod_mat_get_coeff_ui(mat, i, j);
 			ulong n_inv = z_invert(n, p);
 			zmod_mat_row_scalar_mul_right(mat, i, n_inv, j);
-			for(ulong u = i + 1; u < rows; u++)
+			ulong u;
+         for (u = i + 1; u < rows; u++)
 			{
 			   coeff = zmod_mat_get_coeff_ui(mat, u, j);
 			   if (coeff) zmod_mat_row_scalar_submul_right(mat, u, i, coeff, j);
@@ -428,10 +475,10 @@ ulong zmod_mat_row_reduce_gauss(zmod_mat_t mat)
 ulong zmod_mat_row_reduce_gauss_jordan(zmod_mat_t mat)
 {
 	ulong i = 0, j = 0, k;
-    ulong rows = mat->rows;
+   ulong rows = mat->rows;
 	ulong cols = mat->cols;
 	ulong coeff;
-    ulong p = mat->p;
+   ulong p = mat->p;
 
 	while ((i < rows) && (j < cols))
 	{
@@ -444,12 +491,13 @@ ulong zmod_mat_row_reduce_gauss_jordan(zmod_mat_t mat)
 			ulong n = zmod_mat_get_coeff_ui(mat, i, j);
 			ulong n_inv = z_invert(n, p);
 			zmod_mat_row_scalar_mul_right(mat, i, n_inv, j);
-			for(ulong u = 0; u < i; u++)
+			ulong u;
+			for (u = 0; u < i; u++)
 			{
 			   coeff = zmod_mat_get_coeff_ui(mat, u, j);
 			   if (coeff) zmod_mat_row_scalar_submul_right(mat, u, i, coeff, j);
 			}
-			for(ulong u = i + 1; u < rows; u++)
+			for (u = i + 1; u < rows; u++)
 			{
 			   coeff = zmod_mat_get_coeff_ui(mat, u, j);
 			   if (coeff) zmod_mat_row_scalar_submul_right(mat, u, i, coeff, j);
@@ -461,3 +509,224 @@ ulong zmod_mat_row_reduce_gauss_jordan(zmod_mat_t mat)
 	return i;
 }
 
+/*******************************************************************************************
+
+   Addition/subtraction
+
+*******************************************************************************************/
+
+void zmod_mat_add(zmod_mat_t C, zmod_mat_t A, zmod_mat_t B)
+{
+   ulong p = A->p;
+   
+   ulong r = A->rows;
+   ulong c = A->cols;
+   
+   for (ulong i = 0; i < r; i++)
+      for (ulong j = 0; j < c; j++)
+         C->arr[i][j] = z_addmod(A->arr[i][j], B->arr[i][j], p);
+}
+
+void zmod_mat_sub(zmod_mat_t C, zmod_mat_t A, zmod_mat_t B)
+{
+   ulong p = A->p;
+   
+   ulong r = A->rows;
+   ulong c = A->cols;
+   
+   for (ulong i = 0; i < r; i++)
+      for (ulong j = 0; j < c; j++)
+         C->arr[i][j] = z_submod(A->arr[i][j], B->arr[i][j], p);
+}
+
+/*******************************************************************************************
+
+   Multiplication
+
+*******************************************************************************************/
+
+ulong zmod_mat_scalar_mul(ulong * r, ulong ** arr, ulong c, ulong n, ulong p, double p_inv)
+{
+   ulong res = 0;
+
+#if FLINT_BITS == 64
+   ulong bits = FLINT_BIT_COUNT(p);
+
+   if (bits > FLINT_D_BITS)
+   {
+      for (ulong i = 0; i < n; i++)
+      {
+         res = z_addmod(res, z_mulmod2_precomp(r[i], arr[i][c], p, p_inv), p);
+      }
+   } else
+   {
+#endif
+      for (ulong i = 0; i < n; i++)
+      {
+         res = z_addmod(res, z_mulmod_precomp(r[i], arr[i][c], p, p_inv), p);
+      }
+#if FLINT_BITS == 64
+   }
+#endif
+
+   return res;
+}
+
+void zmod_mat_mul_classical(zmod_mat_t prod, zmod_mat_t A, zmod_mat_t B)
+{
+   ulong p = A->p;
+   double p_inv = A->p_inv;
+
+   ulong r1 = A->rows;
+   ulong c1 = A->cols;
+   ulong r2 = B->rows;
+   ulong c2 = B->cols;
+
+   for (ulong i = 0; i < r1; i++)
+      for (ulong j = 0; j < c2; j++)
+         prod->arr[i][j] = zmod_mat_scalar_mul(A->arr[i], B->arr, j, c1, p, p_inv);
+}
+
+void zmod_mat_addmul_classical(zmod_mat_t prod, zmod_mat_t A, zmod_mat_t B)
+{
+   ulong p = A->p;
+   double p_inv = A->p_inv;
+
+   ulong r1 = A->rows;
+   ulong c1 = A->cols;
+   ulong r2 = B->rows;
+   ulong c2 = B->cols;
+
+   for (ulong i = 0; i < r1; i++)
+      for (ulong j = 0; j < c2; j++)
+         prod->arr[i][j] = z_addmod(prod->arr[i][j], zmod_mat_scalar_mul(A->arr[i], B->arr, j, c1, p, p_inv), p);
+}
+
+#define CUTOFF 8
+
+void zmod_mat_mul_strassen(zmod_mat_t C, zmod_mat_t A, zmod_mat_t B)
+{
+   ulong a, b, c;
+   ulong anr, anc, bnr, bnc;
+
+   a = A->rows;
+   b = A->cols;
+   c = B->cols;
+
+   if (a <= CUTOFF || b <= CUTOFF || c <= CUTOFF)
+   {
+      zmod_mat_mul_classical(C, A, B);
+      return;
+   }
+
+   anr = a/2;
+   anc = b/2;
+   bnr = anc;
+   bnc = c/2;
+
+   zmod_mat_t A11; zmod_mat_window_init(A11, A, 0, 0, anr, anc);
+   zmod_mat_t A12; zmod_mat_window_init(A12, A, 0, anc, anr, 2*anc);
+   zmod_mat_t A21; zmod_mat_window_init(A21, A, anr, 0, 2*anr, anc);
+   zmod_mat_t A22; zmod_mat_window_init(A22, A, anr, anc, 2*anr, 2*anc);
+
+   zmod_mat_t B11; zmod_mat_window_init(B11, B, 0, 0, bnr, bnc);
+   zmod_mat_t B12; zmod_mat_window_init(B12, B, 0, bnc, bnr, 2*bnc);
+   zmod_mat_t B21; zmod_mat_window_init(B21, B, bnr, 0, 2*bnr, bnc);
+   zmod_mat_t B22; zmod_mat_window_init(B22, B, bnr, bnc, 2*bnr, 2*bnc);
+
+   zmod_mat_t C11; zmod_mat_window_init(C11, C, 0, 0, anr, bnc);
+   zmod_mat_t C12; zmod_mat_window_init(C12, C, 0, bnc, anr, 2*bnc);
+   zmod_mat_t C21; zmod_mat_window_init(C21, C, anr, 0, 2*anr, bnc);
+   zmod_mat_t C22; zmod_mat_window_init(C22, C, anr, bnc, 2*anr, 2*bnc);
+
+   zmod_mat_t X1; zmod_mat_init(X1, A->p, anr, FLINT_MAX(bnc, anc));
+   zmod_mat_t X2; zmod_mat_init(X2, A->p, anc, bnc);
+
+   X1->cols = anc;
+
+   /**
+   * \note See Jean-Guillaume Dumas, Clement Pernet, Wei Zhou; "Memory
+   * efficient scheduling of Strassen-Winograd's matrix multiplication
+   * algorithm"; http://arxiv.org/pdf/0707.2347v3 for reference on the
+   * used operation scheduling.
+   */
+  
+   zmod_mat_sub(X1, A11, A21);
+   zmod_mat_sub(X2, B22, B12);
+   zmod_mat_mul_strassen(C21, X1, X2);
+   
+   zmod_mat_add(X1, A21, A22);
+   zmod_mat_sub(X2, B12, B11);
+   zmod_mat_mul_strassen(C22, X1, X2);
+   
+   zmod_mat_sub(X1, X1, A11);
+   zmod_mat_sub(X2, B22, X2);
+   zmod_mat_mul_strassen(C12, X1, X2);
+
+   zmod_mat_sub(X1, A12, X1);
+   zmod_mat_mul_strassen(C11, X1, B22);
+
+   X1->cols = bnc;
+   zmod_mat_mul_strassen(X1, A11, B11);
+
+   zmod_mat_add(C12, X1, C12);
+   zmod_mat_add(C21, C12, C21);
+   zmod_mat_add(C12, C12, C22);
+   zmod_mat_add(C22, C21, C22);
+   zmod_mat_add(C12, C12, C11);
+   zmod_mat_sub(X2, X2, B21);
+   zmod_mat_mul_strassen(C11, A22, X2);
+
+   zmod_mat_clear(X2);
+
+   zmod_mat_sub(C21, C21, C11);
+   zmod_mat_mul_strassen(C11, A12, B21);
+
+   zmod_mat_add(C11, X1, C11);
+
+   zmod_mat_clear(X1);
+
+   zmod_mat_window_clear(A11);
+   zmod_mat_window_clear(A12);
+   zmod_mat_window_clear(A21);
+   zmod_mat_window_clear(A22);
+
+   zmod_mat_window_clear(B11);
+   zmod_mat_window_clear(B12);
+   zmod_mat_window_clear(B21);
+   zmod_mat_window_clear(B22);
+
+   zmod_mat_window_clear(C11);
+   zmod_mat_window_clear(C12);
+   zmod_mat_window_clear(C21);
+   zmod_mat_window_clear(C22);
+
+   if (c > 2*bnc) // A by last col of B -> last col of C
+   {
+      zmod_mat_t Bc; zmod_mat_window_init(Bc, B, 0, 2*bnc, b, c);
+      zmod_mat_t Cc; zmod_mat_window_init(Cc, C, 0, 2*bnc, a, c);
+      zmod_mat_mul_classical(Cc, A, Bc);
+      zmod_mat_window_clear(Bc);
+      zmod_mat_window_clear(Cc);
+   }
+
+   if (a > 2*anr) // last row of A by B -> last row of C
+   {
+      zmod_mat_t Ar; zmod_mat_window_init(Ar, A, 2*anr, 0, a, b);
+      zmod_mat_t Cr; zmod_mat_window_init(Cr, C, 2*anr, 0, a, c);
+      zmod_mat_mul_classical(Cr, Ar, B);
+      zmod_mat_window_clear(Ar);
+      zmod_mat_window_clear(Cr);
+   }
+
+   if (b > 2*anc) // last col of A by last row of B -> C
+   {
+      zmod_mat_t Ac; zmod_mat_window_init(Ac, A, 0, 2*anc, 2*anr, b);
+      zmod_mat_t Br; zmod_mat_window_init(Br, B, 2*bnr, 0, b, 2*bnc);
+      zmod_mat_t Cb; zmod_mat_window_init(Cb, C, 0, 0, 2*anr, 2*bnc);
+      zmod_mat_addmul_classical(Cb, Ac, Br);
+      zmod_mat_window_clear(Ac);
+      zmod_mat_window_clear(Br);
+      zmod_mat_window_clear(Cb);
+   }
+}

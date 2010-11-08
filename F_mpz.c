@@ -28,6 +28,9 @@
 #include <math.h>
 #include <stdio.h>
 #include <gmp.h>
+#ifndef __TINYC__
+#include <mpfr.h>
+#endif
 
 #include "flint.h"
 #include "mpn_extras.h"
@@ -74,7 +77,8 @@ F_mpz _F_mpz_new_mpz(void)
 		}
 		
 		// initialise the new mpz_t's and unused array
-		for (ulong i = 0; i < MPZ_BLOCK; i++)
+		ulong i;
+		for (i = 0; i < MPZ_BLOCK; i++)
 		{
 			mpz_init(F_mpz_arr + F_mpz_allocated + i);
 			F_mpz_unused_arr[F_mpz_num_unused] = OFF_TO_COEFF(F_mpz_allocated + i);
@@ -100,7 +104,8 @@ void _F_mpz_clear_mpz(F_mpz f)
 
 void _F_mpz_cleanup(void)
 {
-	for (long i = 0; i < F_mpz_num_unused; i++)
+	long i;
+	for (i = 0; i < F_mpz_num_unused; i++)
 	{
 		mpz_clear(F_mpz_arr + COEFF_TO_OFF(F_mpz_unused_arr[i]));
    }
@@ -216,6 +221,7 @@ void F_mpz_random(F_mpz_t f, const ulong bits)
 {
 	if (bits <= FLINT_BITS - 2)
    {
+      _F_mpz_demote(f);
       ulong temp;
       mpn_random(&temp, 1L);
       ulong mask = ((1L<<bits)-1L);
@@ -268,15 +274,13 @@ void F_mpz_randomm(F_mpz_t f, const mpz_t in)
 
 void F_mpz_set_si(F_mpz_t f, const long val)
 {
-   if (FLINT_ABS(val) > COEFF_MAX) // val is large
+   if (FLINT_ABS(val) > (ulong) COEFF_MAX) // val is large
 	{
-		
 		__mpz_struct * mpz_coeff = _F_mpz_promote(f);
 		mpz_set_si(mpz_coeff, val);
 		
 	} else 
 	{
-		
 		_F_mpz_demote(f);
 		
 		*f = val; // val is small
@@ -359,6 +363,89 @@ double F_mpz_get_d_2exp(long * exp, const F_mpz_t f)
 	}
 }
 
+/* 
+   Gets f as a double.
+*/
+double F_mpz_get_d(const F_mpz_t f)
+{
+   F_mpz d = *f;
+   long bits;
+
+	if (!COEFF_IS_MPZ(d))
+   {
+      if (d >= 0L) 
+      {
+         bits = FLINT_BIT_COUNT(d) - 53;
+         if (bits > 0L) return (double) ((d>>bits)<<bits);
+      } else
+      {
+         bits = FLINT_BIT_COUNT(-d) - 53;
+         if (bits > 0L) return (double) -(((-d)>>bits)<<bits);
+      }
+      
+      return (double) d;
+   } else 
+      return mpz_get_d(F_mpz_arr + COEFF_TO_OFF(d));
+}
+
+/*
+   Set f to the double d.
+*/
+void F_mpz_set_d(F_mpz_t f, double d)
+{
+   int exp;
+   double s = frexp(d, &exp);
+
+   if (exp <= FLINT_BITS - 2)
+   {
+      _F_mpz_demote(f);
+      (*f) = (long) d;
+   } else
+   {
+      __mpz_struct * mpz_ptr = _F_mpz_promote(f);
+      mpz_set_d(mpz_ptr, d);
+   }
+}
+
+/* 
+   Gets f as an mpf.
+*/
+void F_mpz_get_mpf(mpf_t m, const F_mpz_t f)
+{
+   F_mpz d = *f;
+
+	if (!COEFF_IS_MPZ(d))
+      mpf_set_si(m, d);
+   else 
+      mpf_set_z(m, F_mpz_arr + COEFF_TO_OFF(d));
+}
+
+/* 
+   Sets F_mpz to the integer closest to mant*2^exp
+*/
+void F_mpz_set_d_2exp(F_mpz_t output, double mant, long exp)
+{
+   double x;
+   mpz_t temp;
+   mpz_init(temp);
+
+   if (exp >= 53)
+   {
+      x = ldexp(mant, 53);
+      mpz_set_d(temp, x);    
+      F_mpz_set_mpz(output, temp);
+      F_mpz_mul_2exp(output, output, (ulong) exp - FLINT_D_BITS);
+   } else
+   {
+      x = ldexp(mant, exp);
+      mpz_set_d(temp, x);    
+      F_mpz_set_mpz(output, temp);
+   }
+
+   mpz_clear(temp);
+   return;
+}
+
 void F_mpz_set_mpz(F_mpz_t f, const mpz_t x)
 {
    long size = (long) x->_mp_size;
@@ -394,6 +481,67 @@ void F_mpz_set_mpz(F_mpz_t f, const mpz_t x)
 		
 	}			
 }
+
+#ifndef __TINYC__
+void F_mpz_get_mpfr(mpfr_t x, const F_mpz_t f)
+{
+   F_mpz d = *f;
+
+   if (!COEFF_IS_MPZ(d))
+   {
+      mpfr_set_si(x, d, GMP_RNDN);
+      return;
+   } else
+   {
+      mpfr_set_z(x, F_mpz_arr + COEFF_TO_OFF(d), GMP_RNDN);
+      return;
+   }
+}
+
+void F_mpz_set_mpfr(F_mpz_t f, const mpfr_t x)
+{
+   F_mpz d = *f;
+
+   if (!COEFF_IS_MPZ(d)) // f is small
+   {
+      if (mpfr_fits_slong_p(x, GMP_RNDN)) // x fits in a long
+      {
+         long cx = mpfr_get_si(x, GMP_RNDN);
+         
+         F_mpz_set_si(f, cx);
+      } else // x is large
+      {
+         __mpz_struct * mpz_ptr = _F_mpz_promote(f);
+         mpfr_get_z(mpz_ptr, x, GMP_RNDN);
+      }
+      
+      return;
+   } else // f is large
+   {
+      mpfr_get_z(F_mpz_arr + COEFF_TO_OFF(d), x, GMP_RNDN);
+
+      _F_mpz_demote_val(f); // may actually be small
+      return;
+   }
+}
+
+int F_mpz_set_mpfr_2exp(F_mpz_t f, const mpfr_t x)
+{
+   F_mpz d = *f;
+   int exp;
+
+   if (!COEFF_IS_MPZ(d)) // f is small
+   {
+      __mpz_struct * mpz_ptr = _F_mpz_promote(f);
+      exp = mpfr_get_z_exp(mpz_ptr, x);
+   } else
+      exp = mpfr_get_z_exp(F_mpz_arr + COEFF_TO_OFF(d), x);
+   
+   _F_mpz_demote_val(f); // x may have been small
+      
+   return exp;
+}
+#endif
 
 void F_mpz_set_limbs(F_mpz_t f, const mp_limb_t * x, const ulong limbs)
 {
@@ -500,11 +648,11 @@ void F_mpz_swap(F_mpz_t f, F_mpz_t g)
 
 ================================================================================*/
 
-int F_mpz_equal(const F_mpz_t f, const F_mpz_t g)
+int F_mpz_equal( F_mpz_t f,  F_mpz_t g)
 {
 	if (f == g) return 1; // aliased inputs
 	
-	if (!COEFF_IS_MPZ(*f)) return (*f == *g); // if f is large it can't be equal to g
+        if (!COEFF_IS_MPZ(*f)) return (*f == *g); // if f is large it can't be equal to g
 	else if (!COEFF_IS_MPZ(*g)) return 0; // f is large, so if g isn't....
 	else 
 	{
@@ -759,7 +907,7 @@ void F_mpz_add_mpz(F_mpz_t f, const F_mpz_t g, mpz_t h)
 	}
 }
 
-void F_mpz_sub(F_mpz_t f, const F_mpz_t g, F_mpz_t h)
+void F_mpz_sub(F_mpz_t f, const F_mpz_t g, const F_mpz_t h)
 {
 	F_mpz c1 = *g;
 	F_mpz c2 = *h;
@@ -905,7 +1053,7 @@ void F_mpz_mul2(F_mpz_t f, const F_mpz_t g, const F_mpz_t h)
 	if (!COEFF_IS_MPZ(c2)) // g is large, h is small
 	   mpz_mul_si(mpz_ptr, F_mpz_arr + COEFF_TO_OFF(c1), c2);
    else // c1 and c2 are large
-	   F_mpz_mul(mpz_ptr, F_mpz_arr + COEFF_TO_OFF(c1), F_mpz_arr + COEFF_TO_OFF(c2));
+	   mpz_mul(mpz_ptr, F_mpz_arr + COEFF_TO_OFF(c1), F_mpz_arr + COEFF_TO_OFF(c2));
 	
 }
 
@@ -921,19 +1069,16 @@ void F_mpz_mul_2exp(F_mpz_t f, const F_mpz_t g, const ulong exp)
 		{
 			F_mpz_set_si(f, d<<exp);
 		} else // result is large
-		{
-			
-		   __mpz_struct * mpz_ptr = _F_mpz_promote(f); // g is saved
-         mpz_set_si(mpz_ptr, d); 
+		{			
+		  __mpz_struct * mpz_ptr = _F_mpz_promote(f); // g is saved
+          mpz_set_si(mpz_ptr, d); 
 	      mpz_mul_2exp(mpz_ptr, mpz_ptr, exp);
-			
+          _F_mpz_demote_val(f);		
 		}
 	} else // g is large
-	{
-      
-		__mpz_struct * mpz_ptr = _F_mpz_promote(f); // g is already large
-      mpz_mul_2exp(mpz_ptr, F_mpz_arr + COEFF_TO_OFF(d), exp);   
-		
+	{  
+	   __mpz_struct * mpz_ptr = _F_mpz_promote(f); // g is already large
+       mpz_mul_2exp(mpz_ptr, F_mpz_arr + COEFF_TO_OFF(d), exp);  	
 	}
 }
 
@@ -943,14 +1088,15 @@ void F_mpz_div_2exp(F_mpz_t f, const F_mpz_t g, const ulong exp)
 
 	if (!COEFF_IS_MPZ(d)) // g is small
 	{
-		F_mpz_set_si(f, d>>exp);
+      if (exp >= FLINT_BITS - 2)
+         F_mpz_set_ui(f, 0UL);
+      else
+		 F_mpz_set_si(f, d >= 0L ? d>>exp : -((-d)>>exp));
 	} else // g is large
-	{
-      
+	{     
 		__mpz_struct * mpz_ptr = _F_mpz_promote(f); // g is already large
-		mpz_div_2exp(mpz_ptr, F_mpz_arr + COEFF_TO_OFF(d), exp);   
-		_F_mpz_demote_val(f); // division may make value small
-		
+		mpz_tdiv_q_2exp(mpz_ptr, F_mpz_arr + COEFF_TO_OFF(d), exp);   
+		_F_mpz_demote_val(f); // division may make value small		
 	}
 }
 
@@ -1323,11 +1469,228 @@ void F_mpz_mod(F_mpz_t f, const F_mpz_t g, const F_mpz_t h)
 	}
 }
 
+mp_ptr F_mpz_precompute_inverse(F_mpz_t p)
+{
+   if (!COEFF_IS_MPZ(*p)) // FIXME: deal with this important case
+      return malloc(sizeof(mp_limb_t)); // currently we don't use the inverse
+
+   ulong ps = F_mpz_size(p);
+   mp_limb_t * pm = F_mpz_ptr_mpz(*p)->_mp_d;
+  
+   ulong pnorm = FLINT_BITS - FLINT_BIT_COUNT(pm[ps - 1]);
+
+   mp_ptr res = malloc(sizeof(mp_limb_t)*(ps+1));
+   mp_ptr rem = malloc(sizeof(mp_limb_t)*2*ps);
+   mp_ptr t = malloc(sizeof(mp_limb_t)*2*ps);
+   mp_ptr pn = malloc(sizeof(mp_limb_t)*ps);
+   
+   if (pnorm)
+      mpn_lshift(pn, pm, ps, pnorm);
+   else
+      mpn_copyi(pn, pm, ps);
+
+   mpn_store(t, 2*ps, ~(mp_limb_t) 0);
+   mpn_tdiv_qr(res, rem, 0, t, 2*ps, pn, ps);
+   mpn_sub_1(res + ps, res + ps, ps, 1);
+
+   free(t);
+   free(pn);
+   free(rem);
+
+   return res;
+}
+
+void F_mpz_mod_preinv(F_mpz_t res, F_mpz_t f, F_mpz_t p, mp_srcptr pinv)
+{
+   ulong norm1, norm2, ps, fs, us;
+   F_mpz_t r, u, pnorm;
+   mp_limb_t cy;
+ 
+   if (!COEFF_IS_MPZ(*p)) // FIXME: deal with this important case
+   {
+      F_mpz_mod(res, f, p);
+      return;
+   }
+
+   if (!COEFF_IS_MPZ(*f) || (F_mpz_cmpabs(f, p) < 0)) // |f| < p already
+   {
+      if (F_mpz_sgn(f) < 0)
+         F_mpz_add(res, f, p);
+      else
+         F_mpz_set(res, f);
+      return;
+   }
+
+   __mpz_struct * f_ptr = F_mpz_ptr_mpz(*f);
+   __mpz_struct * p_ptr = F_mpz_ptr_mpz(*p);
+
+   mp_ptr fm = f_ptr->_mp_d;
+   mp_ptr pm = p_ptr->_mp_d;
+
+   ps = p_ptr->_mp_size;
+   fs = FLINT_ABS(f_ptr->_mp_size);
+
+   norm1 = (FLINT_BITS - FLINT_BIT_COUNT(pm[ps - 1]));
+   norm2 = (FLINT_BITS - FLINT_BIT_COUNT(fm[fs - 1]));
+
+   us = fs + (norm1 > norm2);
+   if (us > 2*ps) // FIXME: too large to handle with preinv
+   {
+      F_mpz_mod(res, f, p);
+      return;
+   }
+
+   F_mpz_init(u);
+   F_mpz_init(pnorm);
+   if (norm1)
+   {
+      F_mpz_mul_2exp(u, f, norm1);
+      F_mpz_mul_2exp(pnorm, p, norm1);
+   } else
+   {
+      F_mpz_set(u, f);
+      F_mpz_set(pnorm, p);
+   }
+   
+   __mpz_struct * u_ptr = F_mpz_ptr_mpz(*u);
+   mp_ptr um = u_ptr->_mp_d;
+   __mpz_struct * pn_ptr = F_mpz_ptr_mpz(*pnorm);
+   mp_ptr pnm = pn_ptr->_mp_d;
+
+   if ((us == 2*ps) && (mpn_cmp(um + ps, pnm, ps) >= 0)) // also to big to deal with
+   {
+      F_mpz_mod(res, f, p);
+      F_mpz_clear(u);
+      F_mpz_clear(pnorm);
+      return;
+   }
+ 
+   mp_ptr qm = malloc(sizeof(mp_limb_t)*2*ps);
+   mp_ptr q1p = malloc(sizeof(mp_limb_t)*2*ps);
+
+   if (us != ps)
+   {
+      mpn_mul(qm, pinv, ps, um + ps, us - ps);
+      if (us != 2*ps)
+         mpn_store(qm + us, 2*ps - us, 0);
+   } else
+      mpn_store(qm, 2*ps, 0);
+
+   cy = mpn_add_n(qm, qm, um, us);
+   if (us != 2*ps)
+      mpn_add_1(qm + us, qm + us, 2*ps - us, cy);
+
+   mpn_add_1(qm + ps, qm + ps, ps, 1);
+
+   mpn_mul_n(q1p, qm + ps, pnm, ps);
+   
+   F_mpz_init2(r, ps);
+   __mpz_struct * r_ptr = F_mpz_ptr_mpz(*r);
+   mp_ptr rm = r_ptr->_mp_d;
+
+   mpn_sub_n(rm, um, q1p, ps);
+   
+   if (mpn_cmp(rm, qm, ps) >= 0)
+      mpn_add_n(rm, rm, pnm, ps);
+
+   if (mpn_cmp(rm, pnm, ps) >= 0)
+      mpn_sub_n(rm, rm, pnm, ps);
+
+   r_ptr->_mp_size = ps;
+   while ((r_ptr->_mp_size) && (!rm[r_ptr->_mp_size - 1])) r_ptr->_mp_size--;
+   _F_mpz_demote_val(r);
+
+   F_mpz_div_2exp(r, r, norm1);
+
+   if ((F_mpz_sgn(f) < 0) && (!F_mpz_is_zero(r)))
+   {
+      F_mpz_neg(r, r);
+      F_mpz_add(r, r, p);
+   }
+
+   F_mpz_swap(res, r);
+
+   F_mpz_clear(u);
+   F_mpz_clear(pnorm);
+   F_mpz_clear(r);
+
+   free(qm);
+   free(q1p);
+}
+
+void F_mpz_smod(F_mpz_t res, F_mpz_t f, F_mpz_t p)
+{
+
+   if (F_mpz_is_zero(p))
+   {
+      printf("FLINT Exception: Division by zero\n");
+      abort();
+   }
+
+   if (F_mpz_is_one(p))
+   {
+      F_mpz_zero(res);
+      return;
+   }
+
+   F_mpz_t temp;
+   F_mpz_init(temp);
+
+   F_mpz_mod(temp, f, p);
+
+   F_mpz_t pdiv2;
+   F_mpz_init(pdiv2);
+
+   F_mpz_div_2exp(pdiv2, p, 1);
+
+   if (F_mpz_cmp(temp, pdiv2) > 0)
+      F_mpz_sub(temp, temp, p);
+ 
+   F_mpz_swap(res, temp);
+
+   F_mpz_clear(temp);
+   F_mpz_clear(pdiv2);
+}
+
+void F_mpz_smod_preinv(F_mpz_t res, F_mpz_t f, F_mpz_t p, mp_srcptr pinv)
+{
+
+   if (F_mpz_is_zero(p))
+   {
+      printf("FLINT Exception: Division by zero\n");
+      abort();
+   }
+
+   if (F_mpz_is_one(p))
+   {
+      F_mpz_zero(res);
+      return;
+   }
+
+   F_mpz_t temp;
+   F_mpz_init(temp);
+   
+   F_mpz_mod_preinv(temp, f, p, pinv);
+
+   F_mpz_t pdiv2;
+   F_mpz_init(pdiv2);
+
+   F_mpz_div_2exp(pdiv2, p, 1);
+
+   if (F_mpz_cmp(temp, pdiv2) > 0)
+      F_mpz_sub(temp, temp, p);
+ 
+   F_mpz_swap(temp, res);
+
+   F_mpz_clear(temp);
+   F_mpz_clear(pdiv2);
+}
+
 void F_mpz_gcd(F_mpz_t f, const F_mpz_t g, const F_mpz_t h)
 {
    F_mpz c1 = *g;
 	F_mpz c2 = *h;
-   F_mpz temp;
+   F_mpz temp = 0L;
 
    if (!COEFF_IS_MPZ(c1)) // g is small
 	{
@@ -1638,6 +2001,7 @@ void F_mpz_fdiv_qr(F_mpz_t q, F_mpz_t r, const F_mpz_t g, const F_mpz_t h)
 		} else // both are large
 		{
 			__mpz_struct * mpz_ptr2 = _F_mpz_promote(r);
+         mpz_ptr = F_mpz_arr + COEFF_TO_OFF(*q); // previous promotion of r may realloc F_mpz_arr
          mpz_fdiv_qr(mpz_ptr, mpz_ptr2, F_mpz_arr + COEFF_TO_OFF(c1), F_mpz_arr + COEFF_TO_OFF(c2));
 			_F_mpz_demote_val(q); // division by h may result in small value
 			_F_mpz_demote_val(r); // r in fact may be a small value
@@ -1670,7 +2034,7 @@ void F_mpz_comb_init(F_mpz_comb_t comb, ulong * primes, ulong num_primes)
 
    // create zn_poly modulus information
 	comb->mod = (zn_mod_t *) flint_heap_alloc_bytes(sizeof(zn_mod_t)*num_primes);
-   for (ulong i = 0; i < num_primes; i++) 
+   for (i = 0; i < num_primes; i++) 
       zn_mod_init(comb->mod[i], primes[i]);
 
 	if (n == 0) return; // nothing to do
@@ -1686,7 +2050,8 @@ void F_mpz_comb_init(F_mpz_comb_t comb, ulong * primes, ulong num_primes)
       comb->comb[i] = (F_mpz *) flint_heap_alloc(j);
       comb->res[i] = (F_mpz *) flint_heap_alloc(j);
 		
-		for (ulong k = 0; k < j; k++)
+		ulong k;
+		for (k = 0; k < j; k++)
 		{
 			F_mpz_init(comb->comb[i] + k);
 		   F_mpz_init(comb->res[i] + k);
@@ -1762,9 +2127,11 @@ void F_mpz_comb_clear(F_mpz_comb_t comb)
 
    ulong j = (1L << (n - 1)); // size of top level
    
-	for (ulong i = 0; i < n; i++) // initialise arrays at each level
+	ulong i;
+	for (i = 0; i < n; i++) // initialise arrays at each level
    {
-      for (ulong k = 0; k < j; k++)
+      ulong k;
+      for (k = 0; k < j; k++)
 		{
 			F_mpz_clear(comb->comb[i] + k);
 		   F_mpz_clear(comb->res[i] + k);
@@ -1788,7 +2155,8 @@ void F_mpz_comb_clear(F_mpz_comb_t comb)
 void F_mpz_multi_mod_ui_basecase(ulong * out, F_mpz_t in, 
                                ulong * primes, ulong num_primes, F_mpz_t temp)
 {
-   for (ulong i = 0; i < num_primes; i++)
+   ulong i;
+   for (i = 0; i < num_primes; i++)
    {
       out[i] = F_mpz_mod_ui(temp, in, primes[i]);
    }
@@ -1882,11 +2250,13 @@ F_mpz ** F_mpz_comb_temp_init(F_mpz_comb_t comb)
    F_mpz ** comb_temp = (F_mpz **) flint_heap_alloc(n);
    ulong j = (1L << (n - 1));
    
-	for (ulong i = 0; i < n; i++)
+	ulong i;
+	for (i = 0; i < n; i++)
    {
       comb_temp[i] = (F_mpz *) flint_heap_alloc(j);
 
-      for (ulong k = 0; k < j; k++)
+      ulong k;
+      for (k = 0; k < j; k++)
       {
          F_mpz_init(comb_temp[i] + k);
       }
@@ -1903,9 +2273,11 @@ void F_mpz_comb_temp_free(F_mpz_comb_t comb, F_mpz ** comb_temp)
 	ulong n = comb->n;
    ulong j = (1L << (n - 1));
    
-	for (ulong i = 0; i < n; i++)
+	ulong i;
+	for (i = 0; i < n; i++)
    {
-      for (ulong k = 0; k < j; k++)
+      ulong k;
+      for (k = 0; k < j; k++)
       {
          F_mpz_clear(comb_temp[i] + k);
       }

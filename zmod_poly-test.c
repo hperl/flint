@@ -132,7 +132,8 @@ void randpoly(zmod_poly_t poly, long length, unsigned long n)
               
    zmod_poly_fit_length(poly, length);
    
-   for (unsigned long i = 0; i < length; i++)
+   unsigned long i;
+   for (i = 0; i < length; i++)
       poly->coeffs[i] = randint(n);
    poly->length = length;
       
@@ -145,7 +146,8 @@ int test___zmod_poly_normalise()
    int result = 1;
    unsigned long bits, length, nz_coeff;
    
-   for (unsigned long count1 = 0; (count1 < 100000) && (result == 1) ; count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100000) && (result == 1) ; count1++)
    {
       bits = randint(FLINT_BITS - 1) + 2;
       unsigned long modulus;
@@ -165,7 +167,8 @@ int test___zmod_poly_normalise()
 		nz_coeff = z_randint(length);
 		poly->coeffs[nz_coeff] = 1L;
 
-		for (ulong i = nz_coeff + 1; i < length; i++) poly->coeffs[i] = 0L;
+		ulong i;
+		for (i = nz_coeff + 1; i < length; i++) poly->coeffs[i] = 0L;
       poly->length = length;
 
 		if (length != nz_coeff + 1) result &= (!__zmod_poly_normalised(poly));
@@ -190,7 +193,8 @@ int test_zmod_poly_truncate()
    int result = 1;
    unsigned long bits, length, trunc;
    
-   for (unsigned long count1 = 0; (count1 < 100000) && (result == 1) ; count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100000) && (result == 1) ; count1++)
    {
       bits = randint(FLINT_BITS - 1) + 2;
       unsigned long modulus;
@@ -232,7 +236,8 @@ int test_zmod_poly_reverse()
    int result = 1;
    unsigned long bits, length, length2;
    
-   for (unsigned long count1 = 0; (count1 < 100000) && (result == 1) ; count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100000) && (result == 1) ; count1++)
    {
       bits = randint(FLINT_BITS-1)+2;
       unsigned long modulus;
@@ -260,7 +265,7 @@ int test_zmod_poly_reverse()
       zmod_poly_clear(poly2);
    }
    
-   for (unsigned long count1 = 0; (count1 < 5000) && (result == 1) ; count1++)
+   for (count1 = 0; (count1 < 5000) && (result == 1) ; count1++)
    {
       bits = randint(FLINT_BITS-1)+2;
       unsigned long modulus;
@@ -299,7 +304,8 @@ int test_zmod_poly_to_from_string()
    unsigned long bits, length;
 	char * str;
    
-   for (unsigned long count1 = 0; (count1 < 5000) && (result == 1) ; count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 5000) && (result == 1) ; count1++)
    {
       bits = randint(FLINT_BITS-1)+2;
       unsigned long modulus;
@@ -341,7 +347,8 @@ int test_zmod_poly_fprint_fread()
    int result = 1;
    unsigned long bits, length;
 	
-   for (unsigned long count1 = 0; (count1 < 5000) && (result == 1) ; count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 5000) && (result == 1) ; count1++)
    {
       bits = randint(FLINT_BITS-1)+2;
       unsigned long modulus;
@@ -387,7 +394,8 @@ int test_zmod_poly_addsub()
    zmod_poly_t pol1, pol2, res;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-1)+2;
       unsigned long modulus;
@@ -398,7 +406,8 @@ int test_zmod_poly_addsub()
       zmod_poly_init(pol2, modulus);
       zmod_poly_init(res, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -424,7 +433,8 @@ int test_zmod_poly_addsub()
       zmod_poly_clear(pol2);
       zmod_poly_clear(res);  
    }
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-1)+2;
       unsigned long modulus;
@@ -435,7 +445,8 @@ int test_zmod_poly_addsub()
       zmod_poly_init(pol2, modulus);
       zmod_poly_init(res, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -462,7 +473,8 @@ int test_zmod_poly_addsub()
       zmod_poly_clear(pol2);
       zmod_poly_clear(res);  
    }
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-1)+2;
       unsigned long modulus;
@@ -473,7 +485,8 @@ int test_zmod_poly_addsub()
       zmod_poly_init(pol2, modulus);
       zmod_poly_init(res, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -509,7 +522,8 @@ int test_zmod_poly_add_no_red()
    zmod_poly_t pol1, pol2, res;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -520,7 +534,8 @@ int test_zmod_poly_add_no_red()
       zmod_poly_init(pol2, modulus);
       zmod_poly_init(res, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -529,7 +544,8 @@ int test_zmod_poly_add_no_red()
          randpoly(pol2, length2, modulus);
          
          zmod_poly_add_no_red(res, pol1, pol2);
-			for (ulong i = 0; i < res->length; i++)
+			ulong i;
+			for (i = 0; i < res->length; i++)
 				res->coeffs[i] %= res->p;
          zmod_poly_sub(res, res, pol2);
          
@@ -548,7 +564,8 @@ int test_zmod_poly_add_no_red()
       zmod_poly_clear(pol2);
       zmod_poly_clear(res);  
    }
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -559,7 +576,8 @@ int test_zmod_poly_add_no_red()
       zmod_poly_init(pol2, modulus);
       zmod_poly_init(res, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -569,7 +587,8 @@ int test_zmod_poly_add_no_red()
          
          zmod_poly_set(res,pol1);
          zmod_poly_add_no_red(pol1, pol1, pol2);
-			for (ulong i = 0; i < pol1->length; i++)
+			ulong i;
+			for (i = 0; i < pol1->length; i++)
 				pol1->coeffs[i] %= pol1->p;
          zmod_poly_sub(pol1, pol1, pol2);
          
@@ -588,7 +607,8 @@ int test_zmod_poly_add_no_red()
       zmod_poly_clear(pol2);
       zmod_poly_clear(res);  
    }   
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -599,7 +619,8 @@ int test_zmod_poly_add_no_red()
       zmod_poly_init(pol2, modulus);
       zmod_poly_init(res, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -609,7 +630,8 @@ int test_zmod_poly_add_no_red()
          
          zmod_poly_set(res,pol2);
          zmod_poly_add_no_red(pol2, pol1, pol2);
-			for (ulong i = 0; i < pol2->length; i++)
+			ulong i;
+			for (i = 0; i < pol2->length; i++)
 				pol2->coeffs[i] %= pol2->p;
          zmod_poly_sub(pol2, pol2, pol1);
          
@@ -638,7 +660,8 @@ int test_zmod_poly_neg()
    zmod_poly_t pol1, pol2, res1, res2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-1)+2;
       unsigned long modulus;
@@ -650,7 +673,8 @@ int test_zmod_poly_neg()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(res2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -678,7 +702,8 @@ int test_zmod_poly_neg()
       zmod_poly_clear(res1); 
       zmod_poly_clear(res2);  
    }
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-1)+2;
       unsigned long modulus;
@@ -690,7 +715,8 @@ int test_zmod_poly_neg()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(res2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -721,13 +747,63 @@ int test_zmod_poly_neg()
    return result;
 }
 
+int test_zmod_poly_inflate_deflate()
+{
+   int result = 1;
+   zmod_poly_t pol1, pol2, res1;
+   unsigned long bits;
+   
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
+   {
+      bits = randint(FLINT_BITS-1)+2;
+      unsigned long modulus;
+      
+      do {modulus = randbits(bits);} while (modulus < 2);
+      
+      zmod_poly_init(pol1, modulus);
+      zmod_poly_init(pol2, modulus);
+      zmod_poly_init(res1, modulus);
+      
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
+      {
+         unsigned long length1 = randint(100);
+         unsigned long length2 = randint(100);
+         unsigned long inflate = randint(64) + 1;
+
+         randpoly(pol1, length1, modulus);
+         
+         zmod_poly_inflate(pol2, pol1, inflate);
+         zmod_poly_deflate(res1, pol2, inflate);
+         
+         result &= (zmod_poly_equal(res1, pol1) && ((zmod_poly_deflation(pol2) % inflate == 0) || (pol1->length == 1)));
+         
+         if (!result)
+         {
+            zmod_poly_print(pol1); printf("\n\n");
+            zmod_poly_print(pol2); printf("\n\n");
+            zmod_poly_print(res1); printf("\n\n");
+            printf("length1 = %ld, length2 = %ld, modulus = %ld\n", length1, length2, modulus);
+            printf("deflation = %ld, inflate = %ld\n", zmod_poly_deflation(pol2), inflate);
+         }
+     }
+      
+      zmod_poly_clear(pol1);
+      zmod_poly_clear(pol2);
+      zmod_poly_clear(res1); 
+   }   
+   return result;
+}
+
 int test_zmod_poly_bits()
 {
    int result = 1;
    zmod_poly_t pol1;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-1)+2;
       unsigned long modulus;
@@ -736,7 +812,8 @@ int test_zmod_poly_bits()
       
       zmod_poly_init(pol1, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          
@@ -747,7 +824,8 @@ int test_zmod_poly_bits()
 			
 			mpz_t temp;
 			mpz_init(temp);
-			for (ulong i = 0; i < pol1->length; i++)
+			ulong i;
+			for (i = 0; i < pol1->length; i++)
 			{
 				mpz_set_ui(temp, pol1->coeffs[i]);
 				ulong bits_t = mpz_sizeinbase(temp, 2);
@@ -775,7 +853,8 @@ int test_zmod_poly_shift()
    zmod_poly_t pol1, res;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-1)+2;
       unsigned long modulus;
@@ -785,7 +864,8 @@ int test_zmod_poly_shift()
       zmod_poly_init(pol1, modulus);
       zmod_poly_init(res, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long shift = randint(100);
@@ -809,7 +889,8 @@ int test_zmod_poly_shift()
       zmod_poly_clear(pol1);
       zmod_poly_clear(res); 
    }
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-1)+2;
       unsigned long modulus;
@@ -819,7 +900,8 @@ int test_zmod_poly_shift()
       zmod_poly_init(pol1, modulus);
       zmod_poly_init(res, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long shift = randint(100);
@@ -853,7 +935,8 @@ int test_zmod_poly_swap()
    zmod_poly_t pol1, pol2, res1, res2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-1)+2;
       unsigned long modulus;
@@ -865,7 +948,8 @@ int test_zmod_poly_swap()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(res2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -904,7 +988,8 @@ int test_zmod_poly_setequal()
    zmod_poly_t pol1, res;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-1)+2;
       unsigned long modulus;
@@ -914,7 +999,8 @@ int test_zmod_poly_setequal()
       zmod_poly_init(pol1, modulus);
       zmod_poly_init(res, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          
@@ -937,7 +1023,7 @@ int test_zmod_poly_setequal()
       zmod_poly_clear(res); 
    }
 
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-1)+2;
       unsigned long modulus;
@@ -947,7 +1033,8 @@ int test_zmod_poly_setequal()
       zmod_poly_init(pol1, modulus);
       zmod_poly_init(res, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          
@@ -983,7 +1070,8 @@ int test__zmod_poly_attach()
    zmod_poly_t pol1, res;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-1)+2;
       unsigned long modulus;
@@ -992,7 +1080,8 @@ int test__zmod_poly_attach()
       
       zmod_poly_init(pol1, modulus);
      
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          
@@ -1023,7 +1112,8 @@ int test__zmod_poly_attach_truncate()
    zmod_poly_t pol1, res;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-1)+2;
       unsigned long modulus;
@@ -1032,7 +1122,8 @@ int test__zmod_poly_attach_truncate()
       
       zmod_poly_init(pol1, modulus);
      
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100) + 1;
          
@@ -1065,7 +1156,8 @@ int test__zmod_poly_attach_shift()
    zmod_poly_t pol1, pol2, res;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-1)+2;
       unsigned long modulus;
@@ -1075,7 +1167,8 @@ int test__zmod_poly_attach_shift()
       zmod_poly_init(pol1, modulus);
       zmod_poly_init(pol2, modulus);
      
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100) + 1;
          
@@ -1110,7 +1203,8 @@ int test_zmod_poly_getset_coeff()
    zmod_poly_t pol1, pol2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-1)+2;
       unsigned long modulus;
@@ -1120,7 +1214,8 @@ int test_zmod_poly_getset_coeff()
       zmod_poly_init(pol1, modulus);
       zmod_poly_init(pol2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long num = randint(200);
@@ -1159,7 +1254,8 @@ int test_zmod_poly_mul_classicalKS()
    zmod_poly_t pol1, pol2, res1, res2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -1171,7 +1267,8 @@ int test_zmod_poly_mul_classicalKS()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(res2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 10) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 10) && (result == 1); count2++)
       {
          unsigned long length1 = randint(400);
          unsigned long length2 = randint(400);
@@ -1184,7 +1281,8 @@ int test_zmod_poly_mul_classicalKS()
             randpoly(pol2, length2, modulus);
          
             zmod_poly_mul_classical(res1, pol1, pol2);
-            for (unsigned long i = 0; i < 10; i++)
+            unsigned long i;
+            for (i = 0; i < 10; i++)
                zmod_poly_mul_KS(res2, pol1, pol2, 0);
             
             result &= zmod_poly_equal(res1, res2);
@@ -1216,7 +1314,8 @@ int test_zmod_poly_mul()
    zmod_poly_t pol1, pol2, res1, res2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -1228,7 +1327,8 @@ int test_zmod_poly_mul()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(res2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 10) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 10) && (result == 1); count2++)
       {
          unsigned long length1 = randint(400);
          unsigned long length2 = randint(400);
@@ -1241,7 +1341,8 @@ int test_zmod_poly_mul()
             randpoly(pol2, length2, modulus);
          
             zmod_poly_mul_classical(res1, pol1, pol2);
-            for (unsigned long i = 0; i < 10; i++)
+            unsigned long i;
+            for (i = 0; i < 10; i++)
                zmod_poly_mul(res2, pol1, pol2);
             
             result &= zmod_poly_equal(res1, res2);
@@ -1264,7 +1365,7 @@ int test_zmod_poly_mul()
       zmod_poly_clear(res2);  
    }
 
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -1275,7 +1376,8 @@ int test_zmod_poly_mul()
       zmod_poly_init(pol2, modulus);
       zmod_poly_init(res1, modulus);
       
-		for (unsigned long count2 = 0; (count2 < 10) && (result == 1); count2++)
+		unsigned long count2;
+		for (count2 = 0; (count2 < 10) && (result == 1); count2++)
       {
          unsigned long length1 = randint(400);
          unsigned long length2 = randint(400);
@@ -1308,8 +1410,7 @@ int test_zmod_poly_mul()
       zmod_poly_clear(res1);  
    }
 
-
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -1320,7 +1421,8 @@ int test_zmod_poly_mul()
       zmod_poly_init(pol2, modulus);
       zmod_poly_init(res1, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 10) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 10) && (result == 1); count2++)
       {
          unsigned long length1 = randint(400);
          unsigned long length2 = randint(400);
@@ -1362,7 +1464,8 @@ int test_zmod_poly_sqr_classicalKS()
    zmod_poly_t pol1, res1, res2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -1373,7 +1476,8 @@ int test_zmod_poly_sqr_classicalKS()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(res2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 50) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 50) && (result == 1); count2++)
       {
          unsigned long length1 = randint(400);
          
@@ -1412,7 +1516,8 @@ int test_zmod_poly_sqr()
    zmod_poly_t pol1, res1, res2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -1423,7 +1528,8 @@ int test_zmod_poly_sqr()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(res2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 50) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 50) && (result == 1); count2++)
       {
          unsigned long length1 = randint(400);
          
@@ -1453,7 +1559,7 @@ int test_zmod_poly_sqr()
       zmod_poly_clear(res2);  
    }
    
-   for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -1463,7 +1569,8 @@ int test_zmod_poly_sqr()
       zmod_poly_init(pol1, modulus);
       zmod_poly_init(res2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 50) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 50) && (result == 1); count2++)
       {
          unsigned long length1 = randint(400);
          
@@ -1500,7 +1607,8 @@ int test_zmod_poly_mul_classical_trunc()
    zmod_poly_t pol1, pol2, res1, res2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -1512,7 +1620,8 @@ int test_zmod_poly_mul_classical_trunc()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(res2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 50) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 50) && (result == 1); count2++)
       {
          unsigned long length1 = randint(400);
          unsigned long length2 = randint(400);
@@ -1560,7 +1669,8 @@ int test_zmod_poly_mul_KS_trunc()
    zmod_poly_t pol1, pol2, res1, res2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -1572,7 +1682,8 @@ int test_zmod_poly_mul_KS_trunc()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(res2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(400);
          unsigned long length2 = randint(400);
@@ -1621,7 +1732,8 @@ int test_zmod_poly_mul_trunc_n()
    zmod_poly_t pol1, pol2, res1, res2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -1633,7 +1745,8 @@ int test_zmod_poly_mul_trunc_n()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(res2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(400);
          unsigned long length2 = randint(400);
@@ -1673,7 +1786,7 @@ int test_zmod_poly_mul_trunc_n()
       zmod_poly_clear(res2);  
    }
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -1684,7 +1797,8 @@ int test_zmod_poly_mul_trunc_n()
       zmod_poly_init(pol2, modulus);
       zmod_poly_init(res1, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(400);
          unsigned long length2 = randint(400);
@@ -1722,7 +1836,7 @@ int test_zmod_poly_mul_trunc_n()
       zmod_poly_clear(res1);  
    }
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -1733,7 +1847,8 @@ int test_zmod_poly_mul_trunc_n()
       zmod_poly_init(pol2, modulus);
       zmod_poly_init(res1, modulus);
      
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(400);
          unsigned long length2 = randint(400);
@@ -1780,7 +1895,8 @@ int test_zmod_poly_mul_trunc_n_precache()
    zmod_poly_t pol1, pol2, res1, res2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 30) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 30) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -1792,7 +1908,8 @@ int test_zmod_poly_mul_trunc_n_precache()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(res2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 30) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 30) && (result == 1); count2++)
       {
          unsigned long length1 = randint(2000)+2000;
          unsigned long length2 = randint(2000)+2000;
@@ -1834,7 +1951,7 @@ int test_zmod_poly_mul_trunc_n_precache()
       zmod_poly_clear(res2);  
    }
    
-   for (unsigned long count1 = 0; (count1 < 30) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 30) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -1845,7 +1962,8 @@ int test_zmod_poly_mul_trunc_n_precache()
       zmod_poly_init(pol2, modulus);
       zmod_poly_init(res2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 30) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 30) && (result == 1); count2++)
       {
          unsigned long length1 = randint(2000)+2000;
          unsigned long length2 = randint(2000)+2000;
@@ -1894,7 +2012,8 @@ int test__zmod_poly_mul_KS_precache()
    zmod_poly_t pol1, pol2, res1, res2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 30) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 30) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -1906,7 +2025,8 @@ int test__zmod_poly_mul_KS_precache()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(res2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 30) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 30) && (result == 1); count2++)
       {
          unsigned long length1 = randint(2000)+2000;
          unsigned long length2 = randint(2000)+2000;
@@ -1955,7 +2075,8 @@ int test_zmod_poly_mul_precache()
    zmod_poly_t pol1, pol2, res1, res2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 30) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 30) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -1967,7 +2088,8 @@ int test_zmod_poly_mul_precache()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(res2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 30) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 30) && (result == 1); count2++)
       {
          unsigned long length1 = randint(2000)+2000;
          unsigned long length2 = randint(2000)+2000;
@@ -2006,7 +2128,7 @@ int test_zmod_poly_mul_precache()
       zmod_poly_clear(res2);  
    }
    
-   for (unsigned long count1 = 0; (count1 < 30) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 30) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -2017,7 +2139,8 @@ int test_zmod_poly_mul_precache()
       zmod_poly_init(pol2, modulus);
       zmod_poly_init(res2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 30) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 30) && (result == 1); count2++)
       {
          unsigned long length1 = randint(2000)+2000;
          unsigned long length2 = randint(2000)+2000;
@@ -2064,7 +2187,8 @@ int test_zmod_poly_mul_KS_middle()
    zmod_poly_t pol1, pol2, res1, res2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 30) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 30) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -2076,7 +2200,8 @@ int test_zmod_poly_mul_KS_middle()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(res2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 30) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 30) && (result == 1); count2++)
       {
          unsigned long length1 = randint(1000)+1000;
          unsigned long length2 = (length1+1)/2;
@@ -2091,7 +2216,8 @@ int test_zmod_poly_mul_KS_middle()
             randpoly(pol2, length2, modulus);
          
             zmod_poly_mul_KS_trunc(res1, pol1, pol2, 0, trunc);
-            for (unsigned long i = 0; i < trunc/2; i++)
+            unsigned long i;
+            for (i = 0; i < trunc/2; i++)
                res1->coeffs[i] = 0L;
             zmod_poly_mul_KS_middle(res2, pol1, pol2, 0, trunc);
             
@@ -2115,7 +2241,7 @@ int test_zmod_poly_mul_KS_middle()
       zmod_poly_clear(res2);  
    }
    
-   for (unsigned long count1 = 0; (count1 < 30) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 30) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -2126,7 +2252,8 @@ int test_zmod_poly_mul_KS_middle()
       zmod_poly_init(pol2, modulus);
       zmod_poly_init(res1, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 30) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 30) && (result == 1); count2++)
       {
          unsigned long length1 = randint(1000)+1000;
          unsigned long length2 = (length1+1)/2;
@@ -2141,7 +2268,8 @@ int test_zmod_poly_mul_KS_middle()
             randpoly(pol2, length2, modulus);
          
             zmod_poly_mul_KS_trunc(res1, pol1, pol2, 0, trunc);
-            for (unsigned long i = 0; i < trunc/2; i++)
+            unsigned long i;
+            for (i = 0; i < trunc/2; i++)
                res1->coeffs[i] = 0L;
             zmod_poly_mul_KS_middle(pol1, pol1, pol2, 0, trunc);
             
@@ -2163,7 +2291,7 @@ int test_zmod_poly_mul_KS_middle()
       zmod_poly_clear(res1);  
    }
    
-   for (unsigned long count1 = 0; (count1 < 30) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 30) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -2174,7 +2302,8 @@ int test_zmod_poly_mul_KS_middle()
       zmod_poly_init(pol2, modulus);
       zmod_poly_init(res1, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 30) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 30) && (result == 1); count2++)
       {
          unsigned long length1 = randint(1000)+1000;
          unsigned long length2 = (length1+1)/2;
@@ -2189,7 +2318,8 @@ int test_zmod_poly_mul_KS_middle()
             randpoly(pol2, length2, modulus);
          
             zmod_poly_mul_KS_trunc(res1, pol1, pol2, 0, trunc);
-            for (unsigned long i = 0; i < trunc/2; i++)
+            unsigned long i;
+            for (i = 0; i < trunc/2; i++)
                res1->coeffs[i] = 0L;
             zmod_poly_mul_KS_middle(pol2, pol1, pol2, 0, trunc);
             
@@ -2220,7 +2350,8 @@ int test_zmod_poly_mul_middle()
    zmod_poly_t pol1, pol2, res1, res2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 30) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 30) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -2232,7 +2363,8 @@ int test_zmod_poly_mul_middle()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(res2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 30) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 30) && (result == 1); count2++)
       {
          unsigned long length1 = randint(1000)+1000;
          unsigned long length2 = (length1+1)/2;
@@ -2247,7 +2379,8 @@ int test_zmod_poly_mul_middle()
             randpoly(pol2, length2, modulus);
          
             zmod_poly_mul_KS_trunc(res1, pol1, pol2, 0, trunc);
-            for (unsigned long i = 0; i < trunc/2; i++)
+            unsigned long i;
+            for (i = 0; i < trunc/2; i++)
                res1->coeffs[i] = 0L;
             zmod_poly_mul_middle(res2, pol1, pol2, trunc);
             
@@ -2268,7 +2401,7 @@ int test_zmod_poly_mul_middle()
       zmod_poly_clear(res2);  
    }
    
-   for (unsigned long count1 = 0; (count1 < 30) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 30) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -2279,7 +2412,8 @@ int test_zmod_poly_mul_middle()
       zmod_poly_init(pol2, modulus);
       zmod_poly_init(res1, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 30) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 30) && (result == 1); count2++)
       {
          unsigned long length1 = randint(1000)+1000;
          unsigned long length2 = (length1+1)/2;
@@ -2294,7 +2428,8 @@ int test_zmod_poly_mul_middle()
             randpoly(pol2, length2, modulus);
          
             zmod_poly_mul_KS_trunc(res1, pol1, pol2, 0, trunc);
-            for (unsigned long i = 0; i < trunc/2; i++)
+            unsigned long i;
+            for (i = 0; i < trunc/2; i++)
                res1->coeffs[i] = 0L;
             zmod_poly_mul_middle(pol1, pol1, pol2, trunc);
             
@@ -2313,7 +2448,7 @@ int test_zmod_poly_mul_middle()
       zmod_poly_clear(res1);  
    }
    
-   for (unsigned long count1 = 0; (count1 < 30) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 30) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -2324,7 +2459,8 @@ int test_zmod_poly_mul_middle()
       zmod_poly_init(pol2, modulus);
       zmod_poly_init(res1, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 30) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 30) && (result == 1); count2++)
       {
          unsigned long length1 = randint(1000)+1000;
          unsigned long length2 = (length1+1)/2;
@@ -2339,7 +2475,8 @@ int test_zmod_poly_mul_middle()
             randpoly(pol2, length2, modulus);
          
             zmod_poly_mul_KS_trunc(res1, pol1, pol2, 0, trunc);
-            for (unsigned long i = 0; i < trunc/2; i++)
+            unsigned long i;
+            for (i = 0; i < trunc/2; i++)
                res1->coeffs[i] = 0L;
             zmod_poly_mul_middle(pol2, pol1, pol2, trunc);
             
@@ -2367,7 +2504,8 @@ int test_zmod_poly_mul_middle_precache()
    zmod_poly_t pol1, pol2, res1, res2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 30) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 30) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -2379,7 +2517,8 @@ int test_zmod_poly_mul_middle_precache()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(res2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 30) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 30) && (result == 1); count2++)
       {
          unsigned long length1 = randint(1000)+1000;
          unsigned long length2 = (length1+1)/2;
@@ -2395,7 +2534,8 @@ int test_zmod_poly_mul_middle_precache()
          randpoly(pol2, length2, modulus);
          
          zmod_poly_mul_KS_trunc(res1, pol1, pol2, 0, trunc);
-         for (unsigned long i = 0; i < trunc/2; i++)
+         unsigned long i;
+         for (i = 0; i < trunc/2; i++)
             res1->coeffs[i] = 0L;
 		   zmod_poly_mul_trunc_n_precache_init(pre, pol2, 0, length2);
          zmod_poly_mul_middle_precache(res2, pol1, pre, trunc);
@@ -2421,7 +2561,7 @@ int test_zmod_poly_mul_middle_precache()
       zmod_poly_clear(res2);  
    }
  
-   for (unsigned long count1 = 0; (count1 < 30) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 30) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -2432,7 +2572,8 @@ int test_zmod_poly_mul_middle_precache()
       zmod_poly_init(pol2, modulus);
       zmod_poly_init(res1, modulus);
       
- 	   for (unsigned long count2 = 0; (count2 < 30) && (result == 1); count2++)
+ 	   unsigned long count2;
+ 	   for (count2 = 0; (count2 < 30) && (result == 1); count2++)
       {
          unsigned long length1 = randint(1000)+1000;
          unsigned long length2 = (length1+1)/2;
@@ -2448,7 +2589,8 @@ int test_zmod_poly_mul_middle_precache()
          randpoly(pol2, length2, modulus);
          
          zmod_poly_mul_KS_trunc(res1, pol1, pol2, 0, trunc);
-         for (unsigned long i = 0; i < trunc/2; i++)
+         unsigned long i;
+         for (i = 0; i < trunc/2; i++)
             res1->coeffs[i] = 0L;
 		   zmod_poly_mul_trunc_n_precache_init(pre, pol2, 0, length2);
          zmod_poly_mul_middle_precache(pol1, pol1, pre, trunc);
@@ -2482,7 +2624,8 @@ int test_zmod_poly_mul_classical_trunc_left()
    zmod_poly_t pol1, pol2, res1, res2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -2494,7 +2637,8 @@ int test_zmod_poly_mul_classical_trunc_left()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(res2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 50) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 50) && (result == 1); count2++)
       {
          unsigned long length1 = randint(400);
          unsigned long length2 = randint(400);
@@ -2513,7 +2657,8 @@ int test_zmod_poly_mul_classical_trunc_left()
             zmod_poly_mul_classical(res1, pol1, pol2);
             zmod_poly_mul_classical_trunc_left(res2, pol1, pol2, trunc);
             
-            for (unsigned long i = trunc; i < res1->length; i++)
+            unsigned long i;
+            for (i = trunc; i < res1->length; i++)
                if (res1->coeffs[i] != res2->coeffs[i]) result = 0;
          
 #if DEBUG
@@ -2542,7 +2687,8 @@ int test_zmod_poly_mul_trunc_left_n()
    zmod_poly_t pol1, pol2, res1, res2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -2554,7 +2700,8 @@ int test_zmod_poly_mul_trunc_left_n()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(res2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 25) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 25) && (result == 1); count2++)
       {
          unsigned long length1 = randint(400);
          unsigned long length2 = randint(400);
@@ -2573,7 +2720,8 @@ int test_zmod_poly_mul_trunc_left_n()
             zmod_poly_mul_classical(res1, pol1, pol2);
             zmod_poly_mul_trunc_left_n(res2, pol1, pol2, trunc);
             
-            for (unsigned long i = trunc; i < res1->length; i++)
+            unsigned long i;
+            for (i = trunc; i < res1->length; i++)
                if (res1->coeffs[i] != res2->coeffs[i]) result = 0;
          
 #if DEBUG
@@ -2593,7 +2741,7 @@ int test_zmod_poly_mul_trunc_left_n()
       zmod_poly_clear(res2);  
    }
    
-   for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -2604,7 +2752,8 @@ int test_zmod_poly_mul_trunc_left_n()
       zmod_poly_init(pol2, modulus);
       zmod_poly_init(res1, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 25) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 25) && (result == 1); count2++)
       {
          unsigned long length1 = randint(400);
          unsigned long length2 = randint(400);
@@ -2623,7 +2772,8 @@ int test_zmod_poly_mul_trunc_left_n()
             zmod_poly_mul_classical(res1, pol1, pol2);
             zmod_poly_mul_trunc_left_n(pol1, pol1, pol2, trunc);
             
-            for (unsigned long i = trunc; i < res1->length; i++)
+            unsigned long i;
+            for (i = trunc; i < res1->length; i++)
                if (res1->coeffs[i] != pol1->coeffs[i]) result = 0;
          
 #if DEBUG
@@ -2641,7 +2791,7 @@ int test_zmod_poly_mul_trunc_left_n()
       zmod_poly_clear(res1);  
    }
    
-   for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -2652,7 +2802,8 @@ int test_zmod_poly_mul_trunc_left_n()
       zmod_poly_init(pol2, modulus);
       zmod_poly_init(res1, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 25) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 25) && (result == 1); count2++)
       {
          unsigned long length1 = randint(400);
          unsigned long length2 = randint(400);
@@ -2671,7 +2822,8 @@ int test_zmod_poly_mul_trunc_left_n()
             zmod_poly_mul_classical(res1, pol1, pol2);
             zmod_poly_mul_trunc_left_n(pol2, pol1, pol2, trunc);
             
-            for (unsigned long i = trunc; i < res1->length; i++)
+            unsigned long i;
+            for (i = trunc; i < res1->length; i++)
                if (res1->coeffs[i] != pol2->coeffs[i]) result = 0;
          
 #if DEBUG
@@ -2698,7 +2850,8 @@ int test_zmod_poly_scalar_mul()
    zmod_poly_t pol1, res1;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 1000) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 1000) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -2708,7 +2861,8 @@ int test_zmod_poly_scalar_mul()
       zmod_poly_init(pol1, modulus);
       zmod_poly_init(res1, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          
@@ -2748,7 +2902,8 @@ int test_zmod_poly_make_monic()
    zmod_poly_t pol1, res1;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 1000) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 1000) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -2758,7 +2913,8 @@ int test_zmod_poly_make_monic()
       zmod_poly_init(pol1, modulus);
       zmod_poly_init(res1, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          
@@ -2795,7 +2951,7 @@ int test_zmod_poly_make_monic()
       zmod_poly_clear(res1); 
    }
 
-   for (unsigned long count1 = 0; (count1 < 1000) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 1000) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -2805,7 +2961,8 @@ int test_zmod_poly_make_monic()
       zmod_poly_init(pol1, modulus);
       zmod_poly_init(res1, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          
@@ -2851,7 +3008,8 @@ int test_zmod_poly_divrem_basecase()
    zmod_poly_t pol1, pol2, res1, Q, Q2, R;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -2864,7 +3022,8 @@ int test_zmod_poly_divrem_basecase()
       zmod_poly_init(Q, modulus);
       zmod_poly_init(R, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -2904,7 +3063,7 @@ int test_zmod_poly_divrem_basecase()
    }
    
 	// Alias Q and A
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -2916,7 +3075,8 @@ int test_zmod_poly_divrem_basecase()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(R, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -2954,7 +3114,7 @@ int test_zmod_poly_divrem_basecase()
    }
 
 	// Alias R and A
-	for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -2967,7 +3127,8 @@ int test_zmod_poly_divrem_basecase()
       zmod_poly_init(Q, modulus);
       zmod_poly_init(R, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -3016,7 +3177,8 @@ int test_zmod_poly_rem_basecase()
    zmod_poly_t pol1, pol2, Q, R, R2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -3029,7 +3191,8 @@ int test_zmod_poly_rem_basecase()
       zmod_poly_init(Q, modulus);
       zmod_poly_init(R, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -3069,7 +3232,7 @@ int test_zmod_poly_rem_basecase()
 	}
 
    // Alias R and A
-	for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -3081,7 +3244,8 @@ int test_zmod_poly_rem_basecase()
       zmod_poly_init(Q, modulus);
       zmod_poly_init(R, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -3127,7 +3291,8 @@ int test_zmod_poly_rem_newton()
    zmod_poly_t pol1, pol2, Q, R, R2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -3140,7 +3305,8 @@ int test_zmod_poly_rem_newton()
       zmod_poly_init(Q, modulus);
       zmod_poly_init(R, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -3180,7 +3346,7 @@ int test_zmod_poly_rem_newton()
 	}
 
    // Alias R and A
-	for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -3192,7 +3358,8 @@ int test_zmod_poly_rem_newton()
       zmod_poly_init(Q, modulus);
       zmod_poly_init(R, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -3238,7 +3405,8 @@ int test_zmod_poly_rem()
    zmod_poly_t pol1, pol2, Q, R, R2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -3251,7 +3419,8 @@ int test_zmod_poly_rem()
       zmod_poly_init(Q, modulus);
       zmod_poly_init(R, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -3291,7 +3460,7 @@ int test_zmod_poly_rem()
 	}
 
    // Alias R and A
-	for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -3303,7 +3472,8 @@ int test_zmod_poly_rem()
       zmod_poly_init(Q, modulus);
       zmod_poly_init(R, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -3341,7 +3511,7 @@ int test_zmod_poly_rem()
 	}
 
 	// Alias R and B
-	for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -3353,7 +3523,8 @@ int test_zmod_poly_rem()
       zmod_poly_init(Q, modulus);
       zmod_poly_init(R, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -3399,7 +3570,8 @@ int test_zmod_poly_divrem_q1()
    zmod_poly_t pol1, pol2, Q, R, Q2, R2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -3413,7 +3585,8 @@ int test_zmod_poly_divrem_q1()
       zmod_poly_init(Q2, modulus);
       zmod_poly_init(R2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+2;
          
@@ -3456,7 +3629,7 @@ int test_zmod_poly_divrem_q1()
 	}
 
 	// Alias R and A
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -3469,7 +3642,8 @@ int test_zmod_poly_divrem_q1()
       zmod_poly_init(R, modulus);
       zmod_poly_init(Q2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+2;
          
@@ -3509,7 +3683,7 @@ int test_zmod_poly_divrem_q1()
    }
 
 	// Alias Q and A
-	for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -3522,7 +3696,8 @@ int test_zmod_poly_divrem_q1()
       zmod_poly_init(R, modulus);
       zmod_poly_init(R2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+2;
          
@@ -3571,7 +3746,8 @@ int test_zmod_poly_rem_q1()
    zmod_poly_t pol1, pol2, Q, R, Q2, R2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -3584,7 +3760,8 @@ int test_zmod_poly_rem_q1()
       zmod_poly_init(R, modulus);
       zmod_poly_init(R2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+2;
          
@@ -3622,7 +3799,7 @@ int test_zmod_poly_rem_q1()
    }
    
 	// Alias R and A
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -3634,7 +3811,8 @@ int test_zmod_poly_rem_q1()
       zmod_poly_init(Q, modulus);
       zmod_poly_init(R, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+2;
          
@@ -3678,7 +3856,8 @@ int test_zmod_poly_divrem_q0()
    zmod_poly_t pol1, pol2, Q, R, Q2, R2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -3692,7 +3871,8 @@ int test_zmod_poly_divrem_q0()
       zmod_poly_init(Q2, modulus);
       zmod_poly_init(R2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          
@@ -3735,7 +3915,7 @@ int test_zmod_poly_divrem_q0()
 	}
 
 	// Alias R and A
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -3748,7 +3928,8 @@ int test_zmod_poly_divrem_q0()
       zmod_poly_init(R, modulus);
       zmod_poly_init(Q2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          
@@ -3788,7 +3969,7 @@ int test_zmod_poly_divrem_q0()
    }
 
 	// Alias Q and A
-	for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -3801,7 +3982,8 @@ int test_zmod_poly_divrem_q0()
       zmod_poly_init(R, modulus);
       zmod_poly_init(R2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          
@@ -3850,7 +4032,8 @@ int test_zmod_poly_rem_q0()
    zmod_poly_t pol1, pol2, Q, R, Q2, R2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -3863,7 +4046,8 @@ int test_zmod_poly_rem_q0()
       zmod_poly_init(R, modulus);
       zmod_poly_init(R2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          
@@ -3901,7 +4085,7 @@ int test_zmod_poly_rem_q0()
    }
    
 	// Alias R and A
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -3913,7 +4097,8 @@ int test_zmod_poly_rem_q0()
       zmod_poly_init(Q, modulus);
       zmod_poly_init(R, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          
@@ -3957,7 +4142,8 @@ int test_zmod_poly_divrem_newton()
    zmod_poly_t pol1, pol2, res1, Q, Q2, R;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -3970,7 +4156,8 @@ int test_zmod_poly_divrem_newton()
       zmod_poly_init(Q, modulus);
       zmod_poly_init(R, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -4010,7 +4197,7 @@ int test_zmod_poly_divrem_newton()
    }
    
 	//Alias R and A
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -4023,7 +4210,8 @@ int test_zmod_poly_divrem_newton()
       zmod_poly_init(Q, modulus);
       zmod_poly_init(R, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -4064,7 +4252,7 @@ int test_zmod_poly_divrem_newton()
    }
 
 	//Alias Q and A
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -4076,7 +4264,8 @@ int test_zmod_poly_divrem_newton()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(R, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -4122,7 +4311,8 @@ int test_zmod_poly_divrem()
    zmod_poly_t pol1, pol2, res1, Q, R;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -4135,7 +4325,8 @@ int test_zmod_poly_divrem()
       zmod_poly_init(Q, modulus);
       zmod_poly_init(R, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -4174,7 +4365,7 @@ int test_zmod_poly_divrem()
       zmod_poly_clear(R); 
    }
 
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -4187,7 +4378,8 @@ int test_zmod_poly_divrem()
       zmod_poly_init(Q, modulus);
       zmod_poly_init(R, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -4227,7 +4419,7 @@ int test_zmod_poly_divrem()
       zmod_poly_clear(R); 
    }
 
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -4240,7 +4432,8 @@ int test_zmod_poly_divrem()
       zmod_poly_init(Q, modulus);
       zmod_poly_init(R, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -4280,7 +4473,7 @@ int test_zmod_poly_divrem()
       zmod_poly_clear(R); 
    }
 
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -4293,7 +4486,8 @@ int test_zmod_poly_divrem()
       zmod_poly_init(Q, modulus);
       zmod_poly_init(R, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -4333,7 +4527,7 @@ int test_zmod_poly_divrem()
       zmod_poly_clear(R); 
    }
 
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -4346,7 +4540,8 @@ int test_zmod_poly_divrem()
       zmod_poly_init(Q, modulus);
       zmod_poly_init(R, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -4396,7 +4591,8 @@ int test_zmod_poly_div_basecase()
    zmod_poly_t pol1, pol2, res1, Q;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -4408,7 +4604,8 @@ int test_zmod_poly_div_basecase()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(Q, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -4454,7 +4651,8 @@ int test_zmod_poly_div()
    zmod_poly_t pol1, pol2, res1, Q;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -4466,7 +4664,8 @@ int test_zmod_poly_div()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(Q, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -4503,7 +4702,7 @@ int test_zmod_poly_div()
       zmod_poly_clear(Q); 
    }
 
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -4514,7 +4713,8 @@ int test_zmod_poly_div()
       zmod_poly_init(pol2, modulus);
       zmod_poly_init(res1, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -4549,7 +4749,7 @@ int test_zmod_poly_div()
       zmod_poly_clear(res1); 
    }
 
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -4560,7 +4760,8 @@ int test_zmod_poly_div()
       zmod_poly_init(pol2, modulus);
       zmod_poly_init(res1, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -4604,7 +4805,8 @@ int test_zmod_poly_divrem_divconquer()
    zmod_poly_t pol1, pol2, res1, Q, R;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -4617,7 +4819,8 @@ int test_zmod_poly_divrem_divconquer()
       zmod_poly_init(Q, modulus);
       zmod_poly_init(R, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 30) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 30) && (result == 1); count2++)
       {
          unsigned long length1 = randint(500);
          unsigned long length2 = randint(500);
@@ -4665,7 +4868,8 @@ int test_zmod_poly_div_divconquer()
    zmod_poly_t pol1, pol2, res1, Q;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -4677,7 +4881,8 @@ int test_zmod_poly_div_divconquer()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(Q, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -4723,7 +4928,8 @@ int test_zmod_poly_div_divconquer_recursive()
    zmod_poly_t pol1, pol2, res1, Q, BQ;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 400) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 400) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -4736,7 +4942,8 @@ int test_zmod_poly_div_divconquer_recursive()
       zmod_poly_init(Q, modulus);
       zmod_poly_init(BQ, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100);
          unsigned long length2 = randint(100);
@@ -4786,7 +4993,8 @@ int test_zmod_poly_newton_invert_basecase()
    int result = 1;
    unsigned long bits, length, n;
    
-   for (unsigned long count1 = 0; (count1 < 20000) && (result == 1) ; count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 20000) && (result == 1) ; count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -4814,7 +5022,8 @@ int test_zmod_poly_newton_invert_basecase()
       
          zmod_poly_mul(poly3, poly, poly2);
            
-         for (unsigned long i = 0; i < n - 1; i++)
+         unsigned long i;
+         for (i = 0; i < n - 1; i++)
          {
             result &= (poly3->coeffs[i+poly3->length-n] == 0L);
          }
@@ -4842,7 +5051,8 @@ int test_zmod_poly_newton_invert()
    int result = 1;
    unsigned long bits, length;
    
-   for (unsigned long count1 = 0; (count1 < 30) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 30) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -4859,7 +5069,8 @@ int test_zmod_poly_newton_invert()
       printf("length = %ld, bits = %ld\n", length, bits);
 #endif
 
-      for (unsigned long count2 = 0; (count2 < 30) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 30) && (result == 1); count2++)
       {
          do randpoly(poly, length, modulus); 
          while ((poly->length == 0) || (poly->coeffs[0] == 0L));
@@ -4877,7 +5088,7 @@ int test_zmod_poly_newton_invert()
       zmod_poly_clear(poly3);
    }
 
-   for (unsigned long count1 = 0; (count1 < 30) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 30) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -4894,7 +5105,8 @@ int test_zmod_poly_newton_invert()
       printf("length = %ld, bits = %ld\n", length, bits);
 #endif
 
-      for (unsigned long count2 = 0; (count2 < 30) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 30) && (result == 1); count2++)
       {
          do randpoly(poly, length, modulus); 
          while ((poly->length == 0) || (poly->coeffs[0] == 0L));
@@ -4922,7 +5134,8 @@ int test_zmod_poly_div_series()
    int result = 1;
    unsigned long bits, length;
    
-   for (unsigned long count1 = 0; (count1 < 3000) && (result == 1) ; count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 3000) && (result == 1) ; count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -4967,7 +5180,7 @@ int test_zmod_poly_div_series()
       zmod_poly_clear(poly4);
    }
 
-   for (unsigned long count1 = 0; (count1 < 3000) && (result == 1) ; count1++)
+   for (count1 = 0; (count1 < 3000) && (result == 1) ; count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -5014,7 +5227,7 @@ int test_zmod_poly_div_series()
       zmod_poly_clear(poly4);
    }
 
-   for (unsigned long count1 = 0; (count1 < 3000) && (result == 1) ; count1++)
+   for (count1 = 0; (count1 < 3000) && (result == 1) ; count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -5069,7 +5282,8 @@ int test_zmod_poly_div_newton()
    zmod_poly_t pol1, pol2, res1, Q;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -5081,7 +5295,8 @@ int test_zmod_poly_div_newton()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(Q, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length1 = randint(200);
          unsigned long length2 = randint(200);
@@ -5130,7 +5345,8 @@ int test_zmod_poly_gcd_euclidean()
    zmod_poly_t pol1, pol2, pol3, res1, res2, res3;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -5144,7 +5360,8 @@ int test_zmod_poly_gcd_euclidean()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 50) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 50) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          unsigned long length2 = randint(100)+1;
@@ -5188,7 +5405,8 @@ int test_zmod_poly_gcd_euclidean()
       zmod_poly_clear(res2); 
       zmod_poly_clear(res3); 
    }
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -5202,7 +5420,8 @@ int test_zmod_poly_gcd_euclidean()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 50) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 50) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          unsigned long length2 = randint(100)+1;
@@ -5246,7 +5465,8 @@ int test_zmod_poly_gcd_euclidean()
       zmod_poly_clear(res2); 
       zmod_poly_clear(res3); 
    }
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -5260,7 +5480,8 @@ int test_zmod_poly_gcd_euclidean()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 50) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 50) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          unsigned long length2 = randint(100)+1;
@@ -5314,7 +5535,8 @@ int test_zmod_poly_gcd_invert_euclidean()
    zmod_poly_t pol1, pol2, pol3, res1, res2, res3, res4;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -5329,7 +5551,8 @@ int test_zmod_poly_gcd_invert_euclidean()
       zmod_poly_init(res3, modulus);
       zmod_poly_init(res4, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 50) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 50) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          unsigned long length2 = randint(100)+2;
@@ -5373,7 +5596,8 @@ int test_zmod_poly_gcd_invert_euclidean()
       zmod_poly_clear(res3); 
       zmod_poly_clear(res4); 
    }
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -5388,7 +5612,8 @@ int test_zmod_poly_gcd_invert_euclidean()
       zmod_poly_init(res3, modulus);
       zmod_poly_init(res4, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 50) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 50) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          unsigned long length2 = randint(100)+2;
@@ -5433,7 +5658,8 @@ int test_zmod_poly_gcd_invert_euclidean()
       zmod_poly_clear(res3); 
       zmod_poly_clear(res4); 
    }   
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -5448,7 +5674,8 @@ int test_zmod_poly_gcd_invert_euclidean()
       zmod_poly_init(res3, modulus);
       zmod_poly_init(res4, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 50) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 50) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          unsigned long length2 = randint(100)+2;
@@ -5502,7 +5729,8 @@ int test_zmod_poly_gcd_invert_hgcd()
    zmod_poly_t pol1, pol2, pol3, res1, res2, res3, res4;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -5517,7 +5745,8 @@ int test_zmod_poly_gcd_invert_hgcd()
       zmod_poly_init(res3, modulus);
       zmod_poly_init(res4, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 20) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 20) && (result == 1); count2++)
       {
          unsigned long length1 = randint(1000)+1;
          unsigned long length2 = randint(1000)+2;
@@ -5571,7 +5800,8 @@ int test_zmod_poly_gcd_invert()
    zmod_poly_t pol1, pol2, pol3, res1, res2, res3, res4;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -5586,7 +5816,8 @@ int test_zmod_poly_gcd_invert()
       zmod_poly_init(res3, modulus);
       zmod_poly_init(res4, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 20) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 20) && (result == 1); count2++)
       {
          unsigned long length1 = randint(1000)+1;
          unsigned long length2 = randint(1000)+2;
@@ -5631,7 +5862,7 @@ int test_zmod_poly_gcd_invert()
       zmod_poly_clear(res4); 
    }
 
-   for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -5646,7 +5877,8 @@ int test_zmod_poly_gcd_invert()
       zmod_poly_init(res3, modulus);
       zmod_poly_init(res4, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 20) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 20) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          unsigned long length2 = randint(100)+2;
@@ -5692,7 +5924,7 @@ int test_zmod_poly_gcd_invert()
       zmod_poly_clear(res4); 
    }   
 
-   for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -5707,7 +5939,8 @@ int test_zmod_poly_gcd_invert()
       zmod_poly_init(res3, modulus);
       zmod_poly_init(res4, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 20) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 20) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          unsigned long length2 = randint(100)+2;
@@ -5761,7 +5994,8 @@ int test_zmod_poly_xgcd_euclidean()
    zmod_poly_t s, t, pol1, pol2, pol3, res1, res2, res3;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -5777,7 +6011,8 @@ int test_zmod_poly_xgcd_euclidean()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 20) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 20) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          unsigned long length2 = randint(100)+1;
@@ -5827,7 +6062,7 @@ int test_zmod_poly_xgcd_euclidean()
       zmod_poly_clear(res3); 
    }
    
-	for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -5843,7 +6078,8 @@ int test_zmod_poly_xgcd_euclidean()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 20) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 20) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          unsigned long length2 = randint(100)+1;
@@ -5894,7 +6130,7 @@ int test_zmod_poly_xgcd_euclidean()
       zmod_poly_clear(res3); 
    }
    
-	for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -5910,7 +6146,8 @@ int test_zmod_poly_xgcd_euclidean()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 20) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 20) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          unsigned long length2 = randint(100)+1;
@@ -5961,7 +6198,7 @@ int test_zmod_poly_xgcd_euclidean()
       zmod_poly_clear(res3); 
    }
    
-	for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -5977,7 +6214,8 @@ int test_zmod_poly_xgcd_euclidean()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 20) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 20) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          unsigned long length2 = randint(100)+1;
@@ -6028,7 +6266,7 @@ int test_zmod_poly_xgcd_euclidean()
       zmod_poly_clear(res3); 
    }
    
-	for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -6044,7 +6282,8 @@ int test_zmod_poly_xgcd_euclidean()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 20) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 20) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          unsigned long length2 = randint(100)+1;
@@ -6095,7 +6334,7 @@ int test_zmod_poly_xgcd_euclidean()
       zmod_poly_clear(res3); 
    }
    
-	for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -6111,7 +6350,8 @@ int test_zmod_poly_xgcd_euclidean()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 20) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 20) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          unsigned long length2 = randint(100)+1;
@@ -6162,7 +6402,7 @@ int test_zmod_poly_xgcd_euclidean()
       zmod_poly_clear(res3); 
    }
    
-	for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -6178,7 +6418,8 @@ int test_zmod_poly_xgcd_euclidean()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 20) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 20) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          unsigned long length2 = randint(100)+1;
@@ -6237,7 +6478,8 @@ int test_zmod_poly_xgcd()
    zmod_poly_t s, t, pol1, pol2, pol3, res1, res2, res3;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 10) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 10) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -6253,7 +6495,8 @@ int test_zmod_poly_xgcd()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 10) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 10) && (result == 1); count2++)
       {
          unsigned long length1 = randint(1000)+1;
          unsigned long length2 = randint(1000)+1;
@@ -6303,7 +6546,7 @@ int test_zmod_poly_xgcd()
       zmod_poly_clear(res3); 
    }
    
-	for (unsigned long count1 = 0; (count1 < 10) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 10) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -6319,7 +6562,8 @@ int test_zmod_poly_xgcd()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 10) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 10) && (result == 1); count2++)
       {
          unsigned long length1 = randint(1000)+1;
          unsigned long length2 = randint(1000)+1;
@@ -6370,7 +6614,7 @@ int test_zmod_poly_xgcd()
       zmod_poly_clear(res3); 
    }
    
-	for (unsigned long count1 = 0; (count1 < 10) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 10) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -6386,7 +6630,8 @@ int test_zmod_poly_xgcd()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 10) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 10) && (result == 1); count2++)
       {
          unsigned long length1 = randint(1000)+1;
          unsigned long length2 = randint(1000)+1;
@@ -6437,7 +6682,7 @@ int test_zmod_poly_xgcd()
       zmod_poly_clear(res3); 
    }
    
-	for (unsigned long count1 = 0; (count1 < 10) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 10) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -6453,7 +6698,8 @@ int test_zmod_poly_xgcd()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 10) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 10) && (result == 1); count2++)
       {
          unsigned long length1 = randint(1000)+1;
          unsigned long length2 = randint(1000)+1;
@@ -6504,7 +6750,7 @@ int test_zmod_poly_xgcd()
       zmod_poly_clear(res3); 
    }
    
-	for (unsigned long count1 = 0; (count1 < 10) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 10) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -6520,7 +6766,8 @@ int test_zmod_poly_xgcd()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 10) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 10) && (result == 1); count2++)
       {
          unsigned long length1 = randint(1000)+1;
          unsigned long length2 = randint(1000)+1;
@@ -6571,7 +6818,7 @@ int test_zmod_poly_xgcd()
       zmod_poly_clear(res3); 
    }
    
-	for (unsigned long count1 = 0; (count1 < 10) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 10) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -6587,7 +6834,8 @@ int test_zmod_poly_xgcd()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 10) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 10) && (result == 1); count2++)
       {
          unsigned long length1 = randint(1000)+1;
          unsigned long length2 = randint(1000)+1;
@@ -6638,7 +6886,7 @@ int test_zmod_poly_xgcd()
       zmod_poly_clear(res3); 
    }
    
-	for (unsigned long count1 = 0; (count1 < 10) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 10) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -6654,7 +6902,8 @@ int test_zmod_poly_xgcd()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 10) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 10) && (result == 1); count2++)
       {
          unsigned long length1 = randint(1000)+1;
          unsigned long length2 = randint(1000)+1;
@@ -6713,7 +6962,8 @@ int test_zmod_poly_xgcd_hgcd()
    zmod_poly_t s, t, pol1, pol2, pol3, res1, res2, res3;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -6729,7 +6979,8 @@ int test_zmod_poly_xgcd_hgcd()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 20) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 20) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          unsigned long length2 = randint(100)+1;
@@ -6783,7 +7034,7 @@ int test_zmod_poly_xgcd_hgcd()
       zmod_poly_clear(res3); 
    }
    
-	for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -6799,7 +7050,8 @@ int test_zmod_poly_xgcd_hgcd()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 20) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 20) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          unsigned long length2 = randint(100)+1;
@@ -6850,7 +7102,7 @@ int test_zmod_poly_xgcd_hgcd()
       zmod_poly_clear(res3); 
    }
    
-	for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -6866,7 +7118,8 @@ int test_zmod_poly_xgcd_hgcd()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 20) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 20) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          unsigned long length2 = randint(100)+1;
@@ -6926,7 +7179,8 @@ int test_zmod_poly_resultant_euclidean()
    zmod_poly_t pol1, pol2, lin;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 500) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 500) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -6942,7 +7196,8 @@ int test_zmod_poly_resultant_euclidean()
       unsigned long * roots1 = flint_stack_alloc(r1+1);
       unsigned long * roots2 = flint_stack_alloc(r2+1);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
 #if DEBUG
             printf("r1 = %ld, r2 = %ld, modulus = %ld\n", r1, r2, modulus);
@@ -6950,11 +7205,13 @@ int test_zmod_poly_resultant_euclidean()
 
             int exists;
 
-            for (unsigned long i = 0; i < r1; )
+            unsigned long i;
+            for (i = 0; i < r1; )
             {
                exists = 0;
                unsigned long n = randint(modulus);
-               for (unsigned long j = 0; j < i; j++)
+               unsigned long j;
+               for (j = 0; j < i; j++)
                   if (roots1[j] == n) exists = 1;
                if (!exists) 
                {
@@ -6963,11 +7220,12 @@ int test_zmod_poly_resultant_euclidean()
                }
             }
             
-            for (unsigned long i = 0; i < r2; )
+            for (i = 0; i < r2; )
             {
                exists = 0;
                unsigned long n = randint(modulus);
-               for (unsigned long j = 0; j < i; j++)
+               unsigned long j;
+               for (j = 0; j < i; j++)
                   if (roots2[j] == n) exists = 1;
                if (!exists) 
                {
@@ -6984,13 +7242,13 @@ int test_zmod_poly_resultant_euclidean()
             zmod_poly_set_coeff_ui(lin, 1, 1L);
             lin->length = 2;
             
-            for (unsigned long i = 0; i < r1; i++)
+            for (i = 0; i < r1; i++)
             {
                zmod_poly_set_coeff_ui(lin, 0, z_submod(0, roots1[i], modulus));
                zmod_poly_mul(pol1, pol1, lin);
             }
 
-            for (unsigned long i = 0; i < r2; i++)
+            for (i = 0; i < r2; i++)
             {
                zmod_poly_set_coeff_ui(lin, 0, z_submod(0, roots2[i], modulus));
                zmod_poly_mul(pol2, pol2, lin);
@@ -6999,9 +7257,10 @@ int test_zmod_poly_resultant_euclidean()
             unsigned long res1, res2;
 
             res1 = 1;
-            for (unsigned long i = 0; i < r1; i++)
+            for (i = 0; i < r1; i++)
             {
-               for (unsigned long j = 0; j < r2; j++)
+               unsigned long j;
+               for (j = 0; j < r2; j++)
                {
                   res1 = z_mulmod2_precomp(res1, z_submod(roots1[i], roots2[j], modulus), modulus, pol1->p_inv);
                }
@@ -7017,9 +7276,10 @@ int test_zmod_poly_resultant_euclidean()
                printf("res1 = %ld, res2 = %ld\n", res1, res2);
                zmod_poly_print(pol1); printf("\n\n");
                zmod_poly_print(pol2); printf("\n\n");
-               for (unsigned long i = 0; i < r1; i++) printf("%ld, ", roots1[i]); 
+               unsigned long i;
+               for (i = 0; i < r1; i++) printf("%ld, ", roots1[i]); 
                printf("\n");
-               for (unsigned long i = 0; i < r2; i++) printf("%ld, ", roots2[i]); 
+               for (i = 0; i < r2; i++) printf("%ld, ", roots2[i]); 
                printf("\n");
             }
 #endif
@@ -7042,7 +7302,8 @@ int test_zmod_poly_resultant()
    zmod_poly_t pol1, pol2, pol3, lin;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -7059,7 +7320,8 @@ int test_zmod_poly_resultant()
       unsigned long * roots1 = flint_stack_alloc(r1+1);
       unsigned long * roots2 = flint_stack_alloc(r2+1);
       
-      for (unsigned long count2 = 0; (count2 < 20) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 20) && (result == 1); count2++)
       {
 #if DEBUG
             printf("r1 = %ld, r2 = %ld, modulus = %ld\n", r1, r2, modulus);
@@ -7067,11 +7329,13 @@ int test_zmod_poly_resultant()
 
             int exists;
 
-            for (unsigned long i = 0; i < r1; )
+            unsigned long i;
+            for (i = 0; i < r1; )
             {
                exists = 0;
                unsigned long n = randint(modulus);
-               for (unsigned long j = 0; j < i; j++)
+               unsigned long j;
+               for (j = 0; j < i; j++)
                   if (roots1[j] == n) exists = 1;
                if (!exists) 
                {
@@ -7080,11 +7344,12 @@ int test_zmod_poly_resultant()
                }
             }
             
-            for (unsigned long i = 0; i < r2; )
+            for (i = 0; i < r2; )
             {
                exists = 0;
                unsigned long n = randint(modulus);
-               for (unsigned long j = 0; j < i; j++)
+               unsigned long j;
+               for (j = 0; j < i; j++)
                   if (roots2[j] == n) exists = 1;
                if (!exists) 
                {
@@ -7101,13 +7366,13 @@ int test_zmod_poly_resultant()
             zmod_poly_set_coeff_ui(lin, 1, 1L);
             lin->length = 2;
             
-            for (unsigned long i = 0; i < r1; i++)
+            for (i = 0; i < r1; i++)
             {
                zmod_poly_set_coeff_ui(lin, 0, z_submod(0, roots1[i], modulus));
                zmod_poly_mul(pol1, pol1, lin);
             }
 
-            for (unsigned long i = 0; i < r2; i++)
+            for (i = 0; i < r2; i++)
             {
                zmod_poly_set_coeff_ui(lin, 0, z_submod(0, roots2[i], modulus));
                zmod_poly_mul(pol2, pol2, lin);
@@ -7135,9 +7400,10 @@ int test_zmod_poly_resultant()
                printf("res1 = %ld, res2 = %ld\n", res1, res2);
                zmod_poly_print(pol1); printf("\n\n");
                zmod_poly_print(pol2); printf("\n\n");
-               for (unsigned long i = 0; i < r1; i++) printf("%ld, ", roots1[i]); 
+               unsigned long i;
+               for (i = 0; i < r1; i++) printf("%ld, ", roots1[i]); 
                printf("\n");
-               for (unsigned long i = 0; i < r2; i++) printf("%ld, ", roots2[i]); 
+               for (i = 0; i < r2; i++) printf("%ld, ", roots2[i]); 
                printf("\n");
             }
 #endif
@@ -7167,13 +7433,14 @@ void simple_derivative(zmod_poly_t x_primed, zmod_poly_t x)
 	mpz_poly_t f;
 	mpz_poly_init(f);
 	
-	for(unsigned long i = 0; i < length; ++i)
+	unsigned long i;
+   for(i = 0; i < length; ++i)
 	   mpz_poly_set_coeff_ui(f, i, zmod_poly_get_coeff_ui(x, i));
 	
 	//Now we take the derivative of that:
 	mpz_init(index);
 	mpz_init(num);
-	for(unsigned long i = 0; i < length; ++i)
+	for (i = 0; i < length; ++i)
 	{
 	   mpz_poly_get_coeff(num, f, i+1); // mpn_poly returns 0 if i+1 > length - 1 
 	   mpz_set_ui(index, i+1);		
@@ -7192,7 +7459,8 @@ void simple_derivative(zmod_poly_t x_primed, zmod_poly_t x)
 	if(length !=0) length--;
 	mpz_init(coeff);
 	mpz_init(new_coeff);
-    for (unsigned long i = 0; i < length; i++)
+    
+   for (i = 0; i < length; i++)
 	{
 	   mpz_poly_get_coeff (coeff , f , i);
 	   zmod_poly_set_coeff_ui(x_primed, i, mpz_mod_ui(new_coeff, coeff, p));		
@@ -7210,13 +7478,15 @@ int test_zmod_poly_derivative()
     unsigned long modulus;
 
 	//test random polynomials
-	for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+	unsigned long count1;
+	for (count1 = 0; (count1 < 100) && (result == 1); count1++)
 	{
 		bits = randint(FLINT_BITS-2)+2;
 		
 		do {modulus = randprime(bits);} while (modulus < 2);
 		
-		for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+		unsigned long count2;
+		for (count2 = 0; (count2 < 100) && (result == 1); count2++)
 		{
 
 			unsigned long length = randint(100)+1;
@@ -7247,7 +7517,7 @@ int test_zmod_poly_derivative()
 		}
 	}
 	
-	for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 100) && (result == 1); count1++)
 	{
 	   bits = randint(FLINT_BITS-2)+2;
 		
@@ -7272,13 +7542,14 @@ int test_zmod_poly_derivative()
 	}
 			
 	//test special case poly1 == poly2
-	for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 100) && (result == 1); count1++)
 	{
 		bits = randint(FLINT_BITS-2)+2;
 		
 		do {modulus = randprime(bits);} while (modulus < 2);
 		
-		for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+		unsigned long count2;
+		for (count2 = 0; (count2 < 100) && (result == 1); count2++)
 		{
 
 			unsigned long length = randint(100)+1;
@@ -7309,7 +7580,8 @@ int test_zmod_poly_mulmod()
    zmod_poly_t pol1, pol2, res1, res2, quot, rem, f;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 1000) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 1000) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -7324,7 +7596,8 @@ int test_zmod_poly_mulmod()
       zmod_poly_init(rem, modulus);
       zmod_poly_init(f, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 1) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 1) && (result == 1); count2++)
       {
          unsigned long length1 = randint(400);
          unsigned long length2 = randint(400);
@@ -7366,8 +7639,7 @@ int test_zmod_poly_mulmod()
       zmod_poly_clear(f);  
    }
 
-   
-   for (unsigned long count1 = 0; (count1 < 1000) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 1000) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -7382,7 +7654,8 @@ int test_zmod_poly_mulmod()
       zmod_poly_init(rem, modulus);
       zmod_poly_init(f, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 1) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 1) && (result == 1); count2++)
       {
          unsigned long length1 = randint(400);
          unsigned long length2 = randint(400);
@@ -7424,7 +7697,7 @@ int test_zmod_poly_mulmod()
       zmod_poly_clear(f);  
    }
 
-   for (unsigned long count1 = 0; (count1 < 1000) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 1000) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -7439,7 +7712,8 @@ int test_zmod_poly_mulmod()
       zmod_poly_init(rem, modulus);
       zmod_poly_init(f, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 1) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 1) && (result == 1); count2++)
       {
          unsigned long length1 = randint(400);
          unsigned long length2 = randint(400);
@@ -7481,7 +7755,7 @@ int test_zmod_poly_mulmod()
       zmod_poly_clear(f);  
    }
 
-   for (unsigned long count1 = 0; (count1 < 1000) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 1000) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -7496,7 +7770,8 @@ int test_zmod_poly_mulmod()
       zmod_poly_init(rem, modulus);
       zmod_poly_init(f, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 1) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 1) && (result == 1); count2++)
       {
          unsigned long length1 = randint(400);
          unsigned long length2 = randint(400);
@@ -7549,7 +7824,8 @@ int test_zmod_poly_powmod()
    unsigned long bits;
    long exp;
 
-   for (unsigned long count1 = 0; (count1 < 1500) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 1500) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -7562,7 +7838,8 @@ int test_zmod_poly_powmod()
       zmod_poly_init(f, modulus);
       zmod_poly_init(temp, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 1) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 1) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          unsigned long length3 = randint(100)+1;
@@ -7587,7 +7864,8 @@ int test_zmod_poly_powmod()
             zmod_poly_powmod(res1, pol1, exp, f);
 			zmod_poly_set_coeff_ui(res2, 0, 1L);
 			res2->length = 1;
-			for (unsigned long i = 0; i < FLINT_ABS(exp); i++)
+			unsigned long i;
+			for (i = 0; i < FLINT_ABS(exp); i++)
 			{
 			   zmod_poly_mulmod(res2, res2, pol1, f);
 			}
@@ -7619,7 +7897,7 @@ int test_zmod_poly_powmod()
       zmod_poly_clear(temp);  
    }
 
-   for (unsigned long count1 = 0; (count1 < 1500) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 1500) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -7632,7 +7910,8 @@ int test_zmod_poly_powmod()
       zmod_poly_init(f, modulus);
       zmod_poly_init(temp, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 1) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 1) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          unsigned long length3 = randint(100)+1;
@@ -7659,7 +7938,8 @@ int test_zmod_poly_powmod()
 
 			zmod_poly_set_coeff_ui(res2, 0, 1L);
 			res2->length = 1;
-			for (unsigned long i = 0; i < FLINT_ABS(exp); i++)
+			unsigned long i;
+			for (i = 0; i < FLINT_ABS(exp); i++)
 			{
 			   zmod_poly_mulmod(res2, res2, res1, f);
 			}
@@ -7691,7 +7971,7 @@ int test_zmod_poly_powmod()
       zmod_poly_clear(temp);  
    }
 
-   for (unsigned long count1 = 0; (count1 < 1500) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 1500) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -7704,7 +7984,8 @@ int test_zmod_poly_powmod()
       zmod_poly_init(f, modulus);
       zmod_poly_init(temp, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 1) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 1) && (result == 1); count2++)
       {
          unsigned long length1 = randint(100)+1;
          unsigned long length3 = randint(100)+1;
@@ -7731,7 +8012,8 @@ int test_zmod_poly_powmod()
 
 			zmod_poly_set_coeff_ui(res2, 0, 1L);
 			res2->length = 1;
-			for (unsigned long i = 0; i < FLINT_ABS(exp); i++)
+			unsigned long i;
+			for (i = 0; i < FLINT_ABS(exp); i++)
 			{
 			   zmod_poly_mulmod(res2, res2, pol1, res1);
 			}
@@ -7772,7 +8054,8 @@ int test_zmod_poly_isirreducible()
    int result = 1;
    unsigned long bits, length, length2;
    
-   for (unsigned long count1 = 0; (count1 < 200) && (result == 1) ; count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 200) && (result == 1) ; count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -7836,7 +8119,8 @@ int test_zmod_poly_factor_square_free()
    unsigned long modulus;
    ulong exponents[5];
 
-   for (unsigned long count1 = 0; (count1 < 300) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 300) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       
@@ -7859,10 +8143,11 @@ int test_zmod_poly_factor_square_free()
       while ((!zmod_poly_isirreducible(poly)) || (poly->length < 2));
       exponents[0] = z_randprime(5, 0);
 		ulong prod1 = exponents[0];
-		for (ulong i = 0; i < exponents[0]; i++) zmod_poly_mul(pol1, pol1, poly);
+		ulong i;
+		for (i = 0; i < exponents[0]; i++) zmod_poly_mul(pol1, pol1, poly);
 		
 	   ulong num_factors = z_randint(5)+1;
-	   for (ulong i = 1; i < num_factors; i++)
+	   for (i = 1; i < num_factors; i++)
 	   {
 		   do 
 	      {
@@ -7875,7 +8160,8 @@ int test_zmod_poly_factor_square_free()
 		   do exponents[i] = z_randprime(5, 0);
 			while (prod1 % exponents[i] == 0);
          prod1 *= exponents[i];
-		   for (ulong j = 0; j < exponents[i]; j++) zmod_poly_mul(pol1, pol1, poly);
+		   ulong j;
+		   for (j = 0; j < exponents[i]; j++) zmod_poly_mul(pol1, pol1, poly);
 	   }
      
 		zmod_poly_factor_init(res);
@@ -7885,16 +8171,18 @@ int test_zmod_poly_factor_square_free()
 		if (result)
 		{
 			ulong prod2 = 1;
-			for (ulong i = 0; i < num_factors; i++)
+			ulong i;
+			for (i = 0; i < num_factors; i++)
 				prod2 *= res->exponents[i];
          result &= (prod1 == prod2);
 		}
 		if (!result)
 		{
 			printf("Error: exponents don't match. Modulus = %ld\n", modulus);
-			for (ulong i = 0; i < res->num_factors; i++) printf("%ld ", res->exponents[i]);
+			ulong i;
+			for (i = 0; i < res->num_factors; i++) printf("%ld ", res->exponents[i]);
 			printf("\n");
-         for (ulong i = 0; i < num_factors; i++) printf("%ld ", exponents[i]);
+         for (i = 0; i < num_factors; i++) printf("%ld ", exponents[i]);
 			printf("\n");
 		}
 
@@ -7916,7 +8204,8 @@ int test_zmod_poly_factor_berlekamp()
    unsigned long bits;
    unsigned long modulus;
 
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       
@@ -7936,7 +8225,8 @@ int test_zmod_poly_factor_berlekamp()
       while ((!zmod_poly_isirreducible(pol1)) || (pol1->length < 2));
 		  
 	   ulong num_factors = randint(5) + 1;
-	   for (ulong i = 1; i < num_factors; i++)
+	   ulong i;
+	   for (i = 1; i < num_factors; i++)
 	   {
 		   do 
 	      {
@@ -7977,7 +8267,92 @@ int test_zmod_poly_factor()
    unsigned long modulus;
    ulong exponents[5];
 
-   for (unsigned long count1 = 0; (count1 < 300) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 300) && (result == 1); count1++)
+   {
+      bits = randint(FLINT_BITS-2)+2;
+      
+      do {modulus = randprime(bits);} while (modulus < 2);
+      
+ 	   zmod_poly_init(pol1, modulus);
+      zmod_poly_init(poly, modulus);
+      zmod_poly_init(quot, modulus);
+      zmod_poly_init(rem, modulus);
+     
+	   zmod_poly_zero(pol1);
+		zmod_poly_set_coeff_ui(pol1, 0, 1);
+		
+		ulong length = randint(7) + 2;
+      do 
+	   {
+	      randpoly(poly, length, modulus); 
+		   zmod_poly_make_monic(poly, poly);
+	   }
+      while ((!zmod_poly_isirreducible(poly)) || (poly->length < 2));
+		exponents[0] = z_randint(30)+1;
+		ulong prod1 = exponents[0];
+		ulong i;
+		for (i = 0; i < exponents[0]; i++) zmod_poly_mul(pol1, pol1, poly);
+	   ulong num_factors = z_randint(5)+1;
+	   for (i = 1; i < num_factors; i++)
+	   {
+		   do 
+	      {
+	         length = randint(7) + 2;
+            randpoly(poly, length, modulus); 
+		      zmod_poly_make_monic(poly, poly);
+			   if (poly->length) zmod_poly_divrem(quot, rem, pol1, poly);
+	      }
+         while ((!zmod_poly_isirreducible(poly)) || (poly->length < 2) || (rem->length == 0));
+		   exponents[i] = z_randint(30)+1;
+			prod1 *= exponents[i];
+		   ulong j;
+		   for (j = 0; j < exponents[i]; j++) zmod_poly_mul(pol1, pol1, poly);
+		   }
+		zmod_poly_factor_init(res);
+      ulong lead = zmod_poly_factor(res, pol1);
+      result &= (res->num_factors == num_factors);
+		if (!result)
+		   printf("Error: number of factors incorrect, %ld, %ld\n", res->num_factors, num_factors);
+		
+
+		zmod_poly_t product;
+		zmod_poly_init(product, pol1->p);
+		zmod_poly_set_coeff_ui(product, 0, 1);
+		ulong j;
+		for (i = 0; i < res->num_factors; i++)
+			for (j = 0; j < res->exponents[i]; j++)
+				zmod_poly_mul(product, product, res->factors[i]);
+		zmod_poly_scalar_mul(product, product, lead);
+		result &= zmod_poly_equal(pol1, product);
+		if (!result)
+		{
+			printf("Error: product of factors does not equal original polynomial\n");
+			zmod_poly_print(pol1); printf("\n");
+			zmod_poly_print(product); printf("\n");
+		}
+		zmod_poly_clear(product);
+      
+	   zmod_poly_clear(quot);
+	   zmod_poly_clear(rem);
+	   zmod_poly_clear(pol1);
+	   zmod_poly_clear(poly);
+	   zmod_poly_factor_clear(res);
+   }
+
+	return result;
+}
+
+int test_zmod_poly_factor_cantor_zassenhaus()
+{
+   int result = 1;
+   zmod_poly_t pol1, poly, quot, rem;
+   zmod_poly_factor_t res;
+   unsigned long bits;
+   unsigned long modulus;
+   ulong exponents[5];
+
+   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       
@@ -8018,7 +8393,7 @@ int test_zmod_poly_factor()
 		   for (ulong j = 0; j < exponents[i]; j++) zmod_poly_mul(pol1, pol1, poly);
 	   }
 		zmod_poly_factor_init(res);
-      ulong lead = zmod_poly_factor(res, pol1);
+      zmod_poly_factor_cantor_zassenhaus(res, pol1);
       result &= (res->num_factors == num_factors);
 		if (!result)
 		   printf("Error: number of factors incorrect, %ld, %ld\n", res->num_factors, num_factors);
@@ -8030,6 +8405,7 @@ int test_zmod_poly_factor()
 		for (ulong i = 0; i < res->num_factors; i++)
 			for (ulong j = 0; j < res->exponents[i]; j++)
 				zmod_poly_mul(product, product, res->factors[i]);
+      ulong lead = pol1->coeffs[pol1->length - 1];
 		zmod_poly_scalar_mul(product, product, lead);
 		result &= zmod_poly_equal(pol1, product);
 		if (!result)
@@ -8056,7 +8432,8 @@ int test_zmod_poly_2x2_mat_mul_classical_strassen()
    zmod_poly_2x2_mat_t A, B, R1, R2;
    unsigned long bits, length;
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -8068,7 +8445,8 @@ int test_zmod_poly_2x2_mat_mul_classical_strassen()
       zmod_poly_2x2_mat_init(R1, modulus);
       zmod_poly_2x2_mat_init(R2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length = randint(100)+1;
          
@@ -8112,7 +8490,8 @@ int test_zmod_poly_2x2_mat_mul()
    zmod_poly_2x2_mat_t A, B, R1, R2;
    unsigned long bits, length;
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -8124,7 +8503,8 @@ int test_zmod_poly_2x2_mat_mul()
       zmod_poly_2x2_mat_init(R1, modulus);
       zmod_poly_2x2_mat_init(R2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length = randint(100)+1;
          
@@ -8153,7 +8533,7 @@ int test_zmod_poly_2x2_mat_mul()
          }
       }
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length = randint(100)+1;
          
@@ -8182,7 +8562,7 @@ int test_zmod_poly_2x2_mat_mul()
          }
       }
       
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length = randint(100)+1;
          
@@ -8227,7 +8607,8 @@ int test_zmod_poly_half_gcd()
    zmod_poly_2x2_mat_t Q;
 	unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -8242,7 +8623,8 @@ int test_zmod_poly_half_gcd()
       zmod_poly_init(res1, modulus);
       zmod_poly_2x2_mat_init(Q, modulus);
 				
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length2 = randint(50)+1;
          unsigned long length1 = length2 + randint(50)+1;
@@ -8312,7 +8694,8 @@ int test_zmod_poly_half_gcd_iter()
    zmod_poly_2x2_mat_t Q;
 	unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -8327,7 +8710,8 @@ int test_zmod_poly_half_gcd_iter()
       zmod_poly_init(res1, modulus);
       zmod_poly_2x2_mat_init(Q, modulus);
 				
-      for (unsigned long count2 = 0; (count2 < 100) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 100) && (result == 1); count2++)
       {
          unsigned long length2 = randint(50)+1;
          unsigned long length1 = length2 + randint(50)+1;
@@ -8396,7 +8780,8 @@ int test_zmod_poly_gcd_hgcd()
    zmod_poly_t pol1, pol2, pol3, res1, res2, res3;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -8410,7 +8795,8 @@ int test_zmod_poly_gcd_hgcd()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 50) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 50) && (result == 1); count2++)
       {
          unsigned long length2 = randint(100)+1;
          unsigned long length1 = randint(100)+1;
@@ -8454,7 +8840,8 @@ int test_zmod_poly_gcd_hgcd()
       zmod_poly_clear(res2); 
       zmod_poly_clear(res3); 
    }
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -8468,7 +8855,8 @@ int test_zmod_poly_gcd_hgcd()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 50) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 50) && (result == 1); count2++)
       {
          unsigned long length2 = randint(100)+1;
          unsigned long length1 = randint(100)+1;
@@ -8514,7 +8902,7 @@ int test_zmod_poly_gcd_hgcd()
       zmod_poly_clear(res3); 
    }
 
-   for (unsigned long count1 = 0; (count1 < 100) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 100) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -8528,7 +8916,8 @@ int test_zmod_poly_gcd_hgcd()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 50) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 50) && (result == 1); count2++)
       {
          unsigned long length2 = randint(100)+1;
          unsigned long length1 = randint(100)+1;
@@ -8583,7 +8972,8 @@ int test_zmod_poly_gcd()
    zmod_poly_t pol1, pol2, pol3, res1, res2, res3;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 20) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 20) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -8597,7 +8987,8 @@ int test_zmod_poly_gcd()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 30) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 30) && (result == 1); count2++)
       {
          unsigned long length1 = randint(300)+1;
          unsigned long length2 = randint(300)+1;
@@ -8641,7 +9032,7 @@ int test_zmod_poly_gcd()
    }
    
 	// alias both inputs
-	for (unsigned long count1 = 0; (count1 < 20) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 20) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -8653,7 +9044,8 @@ int test_zmod_poly_gcd()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 30) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 30) && (result == 1); count2++)
       {
          unsigned long length1 = randint(300)+1;
          unsigned long length2 = randint(300)+1;
@@ -8685,7 +9077,7 @@ int test_zmod_poly_gcd()
    }
 
 	// alias first input and output
-	for (unsigned long count1 = 0; (count1 < 20) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 20) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -8699,7 +9091,8 @@ int test_zmod_poly_gcd()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 30) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 30) && (result == 1); count2++)
       {
          unsigned long length1 = randint(300)+1;
          unsigned long length2 = randint(300)+1;
@@ -8742,7 +9135,7 @@ int test_zmod_poly_gcd()
    }
 
    // alias second input and output
-	for (unsigned long count1 = 0; (count1 < 20) && (result == 1); count1++)
+	for (count1 = 0; (count1 < 20) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -8756,7 +9149,8 @@ int test_zmod_poly_gcd()
       zmod_poly_init(res2, modulus);
       zmod_poly_init(res3, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 30) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 30) && (result == 1); count2++)
       {
          unsigned long length1 = randint(300)+1;
          unsigned long length2 = randint(300)+1;
@@ -8807,7 +9201,8 @@ int test_zmod_poly_evaluate()
    zmod_poly_t pol1;
    unsigned long bits, c, val1, val2;
    
-   for (unsigned long count1 = 0; (count1 < 1000) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 1000) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -8816,7 +9211,8 @@ int test_zmod_poly_evaluate()
       
       zmod_poly_init(pol1, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 20) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 20) && (result == 1); count2++)
       {
          unsigned long length1 = randint(300);
          
@@ -8831,7 +9227,8 @@ int test_zmod_poly_evaluate()
 		 else
 		 {
 			 val1 = pol1->coeffs[pol1->length - 1];
-			 for (long i = pol1->length - 1; i > 0; i--)
+			 long i;
+			 for (i = pol1->length - 1; i > 0; i--)
 			 {
 				 val1 = z_mulmod2_precomp(val1, c, pol1->p, pol1->p_inv);
 				 val1 = z_addmod(val1, pol1->coeffs[i - 1], pol1->p);
@@ -8861,7 +9258,8 @@ int test_zmod_poly_compose_horner()
    zmod_poly_t pol1, pol2, res1, res2;
    unsigned long bits;
    
-   for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+   unsigned long count1;
+   for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -8873,7 +9271,8 @@ int test_zmod_poly_compose_horner()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(res2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 30) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 30) && (result == 1); count2++)
       {
          unsigned long length1 = randint(30);
          unsigned long length2 = randint(30);
@@ -8892,7 +9291,8 @@ int test_zmod_poly_compose_horner()
 		 {
 			 zmod_poly_set_coeff_ui(res1, 0, pol1->coeffs[pol1->length - 1]);
 			 res1->length = 1;
-			 for (long n = pol1->length - 1; n > 0L; n--)
+			 long n;
+			 for (n = pol1->length - 1; n > 0L; n--)
 			 {
 				 zmod_poly_mul(res1, res1, pol2);
                  if (res1->length == 0) 
@@ -8928,7 +9328,7 @@ int test_zmod_poly_compose_horner()
    }
    
    // alias input polys
-   for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -8940,7 +9340,8 @@ int test_zmod_poly_compose_horner()
       zmod_poly_init(res1, modulus);
       zmod_poly_init(res2, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 30) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 30) && (result == 1); count2++)
       {
          unsigned long length1 = randint(30);
          unsigned long length2 = randint(30);
@@ -8959,7 +9360,8 @@ int test_zmod_poly_compose_horner()
 		 {
 			 zmod_poly_set_coeff_ui(res1, 0, pol1->coeffs[pol1->length - 1]);
 			 res1->length = 1;
-			 for (long n = pol1->length - 1; n > 0L; n--)
+			 long n;
+			 for (n = pol1->length - 1; n > 0L; n--)
 			 {
 				 zmod_poly_mul(res1, res1, pol2);
                  if (res1->length == 0) 
@@ -8995,7 +9397,7 @@ int test_zmod_poly_compose_horner()
    }
    
    // alias first input and output
-   for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -9006,7 +9408,8 @@ int test_zmod_poly_compose_horner()
       zmod_poly_init(pol2, modulus);
       zmod_poly_init(res1, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 30) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 30) && (result == 1); count2++)
       {
          unsigned long length1 = randint(30);
          unsigned long length2 = randint(30);
@@ -9025,7 +9428,8 @@ int test_zmod_poly_compose_horner()
 		 {
 			 zmod_poly_set_coeff_ui(res1, 0, pol1->coeffs[pol1->length - 1]);
 			 res1->length = 1;
-			 for (long n = pol1->length - 1; n > 0L; n--)
+			 long n;
+			 for (n = pol1->length - 1; n > 0L; n--)
 			 {
 				 zmod_poly_mul(res1, res1, pol2);
                  if (res1->length == 0) 
@@ -9059,7 +9463,7 @@ int test_zmod_poly_compose_horner()
    }
    
    // alias second input and output
-   for (unsigned long count1 = 0; (count1 < 50) && (result == 1); count1++)
+   for (count1 = 0; (count1 < 50) && (result == 1); count1++)
    {
       bits = randint(FLINT_BITS-2)+2;
       unsigned long modulus;
@@ -9070,7 +9474,8 @@ int test_zmod_poly_compose_horner()
       zmod_poly_init(pol2, modulus);
       zmod_poly_init(res1, modulus);
       
-      for (unsigned long count2 = 0; (count2 < 30) && (result == 1); count2++)
+      unsigned long count2;
+      for (count2 = 0; (count2 < 30) && (result == 1); count2++)
       {
          unsigned long length1 = randint(30);
          unsigned long length2 = randint(30);
@@ -9089,7 +9494,8 @@ int test_zmod_poly_compose_horner()
 		 {
 			 zmod_poly_set_coeff_ui(res1, 0, pol1->coeffs[pol1->length - 1]);
 			 res1->length = 1;
-			 for (long n = pol1->length - 1; n > 0L; n--)
+			 long n;
+			 for (n = pol1->length - 1; n > 0L; n--)
 			 {
 				 zmod_poly_mul(res1, res1, pol2);
                  if (res1->length == 0) 
@@ -9139,6 +9545,7 @@ void zmod_poly_test_all()
    RUN_TEST(zmod_poly_add_no_red); 
    RUN_TEST(zmod_poly_addsub); 
    RUN_TEST(zmod_poly_neg); 
+   RUN_TEST(zmod_poly_inflate_deflate); 
    RUN_TEST(zmod_poly_bits); 
    RUN_TEST(zmod_poly_shift); 
    RUN_TEST(zmod_poly_swap); 
@@ -9205,6 +9612,7 @@ void zmod_poly_test_all()
    RUN_TEST(zmod_poly_compose_horner); 
    RUN_TEST(zmod_poly_isirreducible); 
    RUN_TEST(zmod_poly_factor_berlekamp); 
+   RUN_TEST(zmod_poly_factor_cantor_zassenhaus); 
    RUN_TEST(zmod_poly_factor_square_free); 
    RUN_TEST(zmod_poly_factor); 
    RUN_TEST(zmod_poly_2x2_mat_mul_classical_strassen); 

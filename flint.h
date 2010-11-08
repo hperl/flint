@@ -36,8 +36,22 @@
 #include <stdint.h>
 #include "longlong_wrapper.h"
 
+#ifdef __TINYC__
+#include "longlong.h"
+#define sqrtf(xxx) sqrt(xxx)
+#define floorf(xxx) floor(xxx)
+#endif
+
 #ifdef __cplusplus
  extern "C" {
+#endif
+
+#ifndef mpz_div_2exp
+#define mpz_div_2exp mpz_tdiv_q_2exp
+#endif
+
+#ifndef mpz_div_ui
+#define mpz_div_ui mpz_tdiv_q_ui
 #endif
 
 #if 0
@@ -152,7 +166,45 @@ Cache size in bytes.
    a = __builtin_ctzl(b);
 #endif
 #else
-#error Currently FLINT only compiles with GCC
+#ifdef __TINYC__
+#define count_lead_zeros(c,n) \
+  do { \
+    union { \
+      double    d; \
+      unsigned  a[2]; \
+    } __u; \
+    ASSERT ((n) != 0); \
+    __u.d = (UWtype) (n); \
+    (c) = 0x3FF + 31 - (__u.a[1] >> 20); \
+   } while (0)
+#define COUNT_LEADING_ZEROS_0   (0x3FF + 31)^M
+#else
+#define count_lead_zeros(a, b) \
+  count_leading_zeros(a, b)
+#endif // __TINYCC__
+#define count_trail_zeros(a, b) \
+  count_trailing_zeros(a, b)
+#endif
+
+
+#if !defined(mpn_zero)
+#define mpn_zero(xxx, nnn) \
+   do \
+   { \
+       ulong ixxx; \
+       for (ixxx = 0; ixxx < nnn; ixxx++) \
+           (xxx)[ixxx] = 0UL; \
+   } while (0)
+#endif
+
+#if !defined(mpn_store)
+#define mpn_store(xxx, nnn, yyy) \
+  do \
+  { \
+     ulong ixxx; \
+     for (ixxx = 0; ixxx < nnn; ixxx++) \
+        (xxx)[ixxx] = yyy; \
+  } while (0)
 #endif
 
 /* 

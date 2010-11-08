@@ -37,6 +37,8 @@
 #include "zmod_poly.h"
 #include "flint.h"
 #include "F_mpz.h"
+#include "F_mpz_mat.h"
+#include "F_mpz_LLL_fast_d.h"
 
 /*
    WARNING : 
@@ -89,6 +91,32 @@ typedef struct
 // F_mpz_poly_t allows reference-like semantics for F_mpz_poly_struct
 typedef F_mpz_poly_struct F_mpz_poly_t[1];
 
+/*****************************************************************************
+
+   F_mpz_poly_factor_t
+
+*****************************************************************************/
+
+/**
+ * This is the data type for storing factors for a polynomial
+ * It contains an array of polynomials <code>factors</code> that contains the factors of the polynomial.
+ * The variable <code>alloc<code> is the number of factors that can be stored in total.
+ * <code>num_factors</code> is the number of factors currently stored.
+ */
+typedef struct
+{
+	F_mpz_poly_t* factors;
+	unsigned long * exponents;
+	unsigned long alloc;
+	unsigned long num_factors;
+} F_mpz_poly_factor_struct;
+
+/**
+ * This is the data type actually used allowing us to pass the factor array by reference
+ */
+typedef F_mpz_poly_factor_struct F_mpz_poly_factor_t[1];
+
+
 /*===============================================================================
 
 	Memory management
@@ -131,6 +159,43 @@ void F_mpz_poly_fit_length(F_mpz_poly_t poly, const ulong length);
 */
 void F_mpz_poly_clear(F_mpz_poly_t poly);
 
+/**
+   \fn     void F_mpz_poly_factor_init(F_mpz_poly_factor_t fac)
+   \brief  Initialises an array of F_mpz_poly's
+*/
+void F_mpz_poly_factor_init(F_mpz_poly_factor_t fac);
+
+/** 
+   \fn     void F_mpz_poly_factor_clear(F_mpz_poly_factor_t fac)
+   \brief  Clear the polynomial array, frees any memory being used
+*/
+void F_mpz_poly_factor_clear(F_mpz_poly_factor_t fac);
+
+/*===============================================================================
+
+   F_mpz_poly_factor_t
+
+================================================================================*/
+
+/**
+   \fn     void F_mpz_poly_factor_insert(F_mpz_poly_factor_t fac, 
+               F_mpz_poly_t poly, unsigned long exp)
+   \brief  Adds an extra element to the array with power exp
+ */
+void F_mpz_poly_factor_insert(F_mpz_poly_factor_t fac, F_mpz_poly_t poly, unsigned long exp);
+
+/**
+   \fn     void F_mpz_poly_factor_concat(F_mpz_poly_factor_t res, F_mpz_poly_factor_t fac)
+   \brief  Concatenates array res and array fac and stores in array res
+ */
+void F_mpz_poly_factor_concat(F_mpz_poly_factor_t res, F_mpz_poly_factor_t fac);
+
+/**
+   \fn     void F_mpz_poly_factor_print(F_mpz_poly_factor_t fac)
+   \brief  Dumps the array to stdout
+ */
+void F_mpz_poly_factor_print(F_mpz_poly_factor_t fac);
+
 /*===============================================================================
 
 	Subpolynomials
@@ -140,7 +205,7 @@ void F_mpz_poly_clear(F_mpz_poly_t poly);
 /** 
    \fn     void _F_mpz_poly_attach(F_mpz_poly_t poly1, F_mpz_poly_t poly2)
    \brief  Make poly1 an alias for poly2. Note poly1 must not be reallocated whilst poly2 
-	        is attached to it.
+           is attached to it.
 */
 static inline
 void _F_mpz_poly_attach(F_mpz_poly_t poly1, const F_mpz_poly_t poly2)
@@ -231,7 +296,7 @@ void F_mpz_poly_set_coeff_ui(F_mpz_poly_t poly, ulong n, const ulong x);
 
 /** 
    \fn     void F_mpz_poly_get_coeff_ui(F_mpz_poly_t poly, ulong n, const long x)
-   \brief  Return coefficient n of poly as an usigned long. If n is greater than the degree
+   \brief  Return coefficient n of poly as an unsigned long. If n is greater than the degree
 	        of poly, then zero is returned.
 */
 ulong F_mpz_poly_get_coeff_ui(const F_mpz_poly_t poly, const ulong n);
@@ -249,6 +314,13 @@ void F_mpz_poly_set_coeff_mpz(F_mpz_poly_t poly, ulong n, const mpz_t x);
 	        of poly, then zero is returned.
 */
 void F_mpz_poly_get_coeff_mpz(mpz_t x, const F_mpz_poly_t poly, const ulong n);
+
+/** 
+   \fn     void F_mpz_poly_set_coeff(F_mpz_poly_t poly, ulong n, const mpz_t x)
+   \brief  Set coefficient n to the F_mpz_t value x. Coefficients are numbered
+	        from the constant coefficient, starting at zero.
+*/
+void F_mpz_poly_set_coeff(F_mpz_poly_t poly, ulong n, const F_mpz_t x);
 
 /*===============================================================================
 
@@ -295,7 +367,8 @@ void _F_mpz_poly_set_length(F_mpz_poly_t poly, const ulong length)
 {
 	if (poly->length > length) // demote coefficients beyond new length
    {
-      for (ulong i = length; i < poly->length; i++)
+      ulong i;
+      for (i = length; i < poly->length; i++)
 			_F_mpz_demote(poly->coeffs + i);	
    } 
 
@@ -313,7 +386,8 @@ void F_mpz_poly_truncate(F_mpz_poly_t poly, const ulong length)
 {
 	if (poly->length > length) // only truncate if necessary
    {
-      for (ulong i = length; i < poly->length; i++)
+      ulong i;
+      for (i = length; i < poly->length; i++)
 			_F_mpz_demote(poly->coeffs + i);
 		poly->length = length;
       _F_mpz_poly_normalise(poly);
@@ -338,6 +412,30 @@ void mpz_poly_to_F_mpz_poly(F_mpz_poly_t F_poly, const mpz_poly_t m_poly);
 */
 void F_mpz_poly_to_mpz_poly(mpz_poly_t m_poly, const F_mpz_poly_t F_poly);
 
+/** 
+   \fn     void F_mpz_poly_to_fmpz_poly(fmpz_poly_t m_poly, const F_mpz_poly_t F_poly)
+   \brief  Convert an F_mpz_poly_t to an fmpz_poly_t
+*/
+void F_mpz_poly_to_fmpz_poly(fmpz_poly_t m_poly, const F_mpz_poly_t F_poly);
+
+/** 
+   \fn     void fmpz_poly_to_F_mpz_poly(F_mpz_poly_t F_poly, const fmpz_poly_t m_poly)
+   \brief  Convert an fmpz_poly_t to an F_mpz_poly_t
+*/
+void fmpz_poly_to_F_mpz_poly(F_mpz_poly_t F_poly, const fmpz_poly_t m_poly);
+
+/** 
+   \fn     void F_mpz_poly_to_zmod_poly(zmod_poly_t zpol, const F_mpz_poly_t fpol)
+   \brief  Convert an F_mpz_poly_t to a reduced zmod_poly_t
+*/
+void F_mpz_poly_to_zmod_poly(zmod_poly_t zpol, const F_mpz_poly_t fpol);
+
+/** 
+   \fn     void zmod_poly_to_F_mpz_poly(F_mpz_poly_t fpol, const zmod_poly_t zpol)
+   \brief  Convert a zmod_poly_t to a F_mpz_poly_t
+*/
+void zmod_poly_to_F_mpz_poly(F_mpz_poly_t fpol, const zmod_poly_t zpol);
+
 /*===============================================================================
 
         Input/output 
@@ -354,6 +452,42 @@ void F_mpz_poly_to_mpz_poly(mpz_poly_t m_poly, const F_mpz_poly_t F_poly);
 int F_mpz_poly_from_string(F_mpz_poly_t poly, const char* s);
 
 /** 
+   \fn     char* F_mpz_poly_to_string(const F_mpz_poly_t poly)
+   \brief  Return a char * in standard FLINT format from F_mpz_poly_t
+*/
+char* F_mpz_poly_to_string(const F_mpz_poly_t poly);
+
+/** 
+   \fn     char* F_mpz_poly_to_string_pretty(const F_mpz_poly_t poly, const char * x)
+   \brief  Return a formated char * from F_mpz_poly_t with variable named at x
+*/
+char* F_mpz_poly_to_string_pretty(const F_mpz_poly_t poly, const char * x);
+
+/** 
+   \fn     void F_mpz_poly_fprint(const F_mpz_poly_t poly, FILE* f)
+   \brief  Prints F_mpz_poly_t to a file stream f in standard FLINT format
+*/
+void F_mpz_poly_fprint(const F_mpz_poly_t poly, FILE* f);
+
+/** 
+   \fn     void F_mpz_poly_fprint_pretty(const F_mpz_poly_t poly, FILE* f, const char * x)
+   \brief  Prints F_mpz_poly_t to a file stream f in pretty format with variable names at x
+*/
+void F_mpz_poly_fprint_pretty(const F_mpz_poly_t poly, FILE* f, const char * x);
+
+/** 
+   \fn     void F_mpz_poly_print_pretty(const F_mpz_poly_t poly, const char * x)
+   \brief  Prints F_mpz_poly_t to screen in pretty format with variable named at x
+*/
+void F_mpz_poly_print_pretty(const F_mpz_poly_t poly, const char * x);
+
+/** 
+   \fn     int F_mpz_poly_fread(F_mpz_poly_t poly, FILE* f)
+   \brief  Reads F_mpz_poly_t from file stream f
+*/
+int F_mpz_poly_fread(F_mpz_poly_t poly, FILE* f);
+
+/**
    \fn     void F_mpz_poly_print(F_mpz_poly_t poly)
    \brief  Print a polynomial to stdout. Format is an integer
            representing the length followed by 2 spaces, followed by 
@@ -393,9 +527,10 @@ void F_mpz_poly_zero(F_mpz_poly_t poly)
 static inline
 void F_mpz_poly_zero_coeffs(F_mpz_poly_t poly, const ulong n)
 {
-	if (n >= poly->length) _F_mpz_poly_set_length(poly, 0);
+	ulong i;
+   if (n >= poly->length) _F_mpz_poly_set_length(poly, 0);
 	else 
-	   for (ulong i = 0; i < n; i++)
+	   for (i = 0; i < n; i++)
 		   F_mpz_zero(poly->coeffs + i);
 }
 
@@ -552,6 +687,26 @@ void F_mpz_poly_scalar_mul_si(F_mpz_poly_t poly1, F_mpz_poly_t poly2, long x);
    \brief  Multiply poly2 by the F_mpz_t x and set poly1 to the result.
 */
 void F_mpz_poly_scalar_mul(F_mpz_poly_t poly1, const F_mpz_poly_t poly2, const F_mpz_t x);
+
+/*===============================================================================
+
+	Scalar division
+
+================================================================================*/
+
+/**
+   \fn     void F_mpz_poly_scalar_divexact(F_mpz_poly_t res, F_mpz_poly_t f, F_mpz_t d)
+   \brief  Divides polynomial f by the scalar d, assuming division is exact.
+*/
+void F_mpz_poly_scalar_divexact(F_mpz_poly_t res, F_mpz_poly_t f, F_mpz_t d);
+
+/**
+   \fn     void F_mpz_poly_scalar_smod(F_mpz_poly_t res, F_mpz_poly_t f, F_mpz_t p)
+   \brief  Reduce each coefficient of f modulo p, but normalise to be in the
+           range (-p/2, p/2].
+*/
+void F_mpz_poly_scalar_smod(F_mpz_poly_t res, F_mpz_poly_t f, F_mpz_t p);
+
 
 /*===============================================================================
 
@@ -813,7 +968,8 @@ void F_mpz_poly_mul_SS(F_mpz_poly_t res, const F_mpz_poly_t poly1, const F_mpz_p
    \brief  Multiply poly1 by poly2 and set res to the result. An attempt is made to choose the 
 	        optimal algorithm.
 */
-void F_mpz_poly_mul(F_mpz_poly_t res, F_mpz_poly_t poly1, F_mpz_poly_t poly2);
+void _F_mpz_poly_mul(F_mpz_poly_t output, const F_mpz_poly_t input1, const F_mpz_poly_t input2);
+void F_mpz_poly_mul(F_mpz_poly_t res, const F_mpz_poly_t poly1, const F_mpz_poly_t poly2);
 
 /** 
    \fn     void F_mpz_poly_mul_trunc_left(F_mpz_poly_t res, F_mpz_poly_t poly1, 
@@ -822,8 +978,10 @@ void F_mpz_poly_mul(F_mpz_poly_t res, F_mpz_poly_t poly1, F_mpz_poly_t poly2);
 	        optimal algorithm. The lower trunc coefficients of res will either be correct or
            set to 0.
 */
-void F_mpz_poly_mul_trunc_left(F_mpz_poly_t res, F_mpz_poly_t poly1, 
-                                              F_mpz_poly_t poly2, ulong trunc);
+void _F_mpz_poly_mul_trunc_left(F_mpz_poly_t res, const F_mpz_poly_t poly1, 
+                                              const F_mpz_poly_t poly2, const ulong trunc);
+void F_mpz_poly_mul_trunc_left(F_mpz_poly_t res, const F_mpz_poly_t poly1, 
+                                              const F_mpz_poly_t poly2, const ulong trunc);
 
 /*===============================================================================
 
@@ -864,6 +1022,12 @@ void F_mpz_poly_div_divconquer_recursive(F_mpz_poly_t Q, F_mpz_poly_t BQ,
 */
 void F_mpz_poly_divrem_divconquer(F_mpz_poly_t Q, F_mpz_poly_t R, 
                                   const F_mpz_poly_t A, const F_mpz_poly_t B);
+
+static inline
+void F_mpz_poly_divrem(F_mpz_poly_t Q, F_mpz_poly_t R, 
+                                  const F_mpz_poly_t A, const F_mpz_poly_t B){
+   F_mpz_poly_divrem_divconquer(Q, R, A, B);
+}
 
 /*===============================================================================
 
@@ -962,6 +1126,258 @@ void F_mpz_poly_pseudo_div_basecase(F_mpz_poly_t Q,
 {
    F_mpz_poly_pseudo_divrem_basecase(Q, NULL, d, A, B);
 }
+
+/*===============================================================================
+
+   Derivative
+
+================================================================================*/
+
+/**
+   Sets der to the derivative of poly.
+*/
+void F_mpz_poly_derivative(F_mpz_poly_t der, F_mpz_poly_t poly);
+
+/**
+   Computes the Gaussian content c of poly. If all the coefficients are
+   negative, the content will be negative also. 
+*/
+void F_mpz_poly_content(F_mpz_t c, const F_mpz_poly_t poly);
+
+/*===============================================================================
+
+   Evaluation
+
+================================================================================*/
+
+/**
+   Evaluate poly at the double val and return the result. No cancellation
+   checks are done. The routine is naive and will return an approximate
+   result which will not be anywhere near correct unless there has been no 
+   cancellation.
+*/
+double F_mpz_poly_eval_horner_d(F_mpz_poly_t poly, double val);
+
+/**
+   Computes the evaluation of poly at the double val, returning the result
+   as a normalised mantissa and an exponent. The result should be extremely
+   close to the correct value, regardless of cancellations, etc. However, it
+   does not guarantee exact rounding (it uses mpfs, not mpfrs internally).
+*/
+double F_mpz_poly_eval_horner_d_2exp(long * exp, F_mpz_poly_t poly, double val);
+
+/*===============================================================================
+
+   Miscellaneous Functions
+
+================================================================================*/
+
+/**
+   Sets output to the same as input but with each coefficient the absolute
+   value of the corresponding coefficient of input.
+*/
+void F_mpz_poly_scalar_abs(F_mpz_poly_t output, F_mpz_poly_t input);
+
+/*===========================================================================
+
+   stupid F_mpz_poly functions which just wrap fmpz_poly functions
+
+============================================================================*/
+
+/**
+   \fn     void F_mpz_poly_gcd(F_mpz_poly_t d, F_mpz_poly_t f, F_mpz_poly_t g)
+   \brief  Takes the polynomial gcd of f and g and writes to d
+*/
+void F_mpz_poly_gcd(F_mpz_poly_t d, F_mpz_poly_t f, F_mpz_poly_t g);
+
+
+/*===========================================================================
+
+   Computing fast/tight bounds for CLDs
+      CLDs:= Coefficients of Logarithmic Derivatives.  f*g'/g
+
+============================================================================*/
+
+/**
+   \fn      int _d_2exp_comp(double a, long ap, double b, long bp)
+   \brief   An internal comparison function for a*2^ap vs. b*2^bp, outputs
+            -2,-1,1, or 2 for the b pair being more than two times larger, 
+            >, <=, or less than two times smaller, respectively than the a
+            pair. Assumes that a and b are normalised.
+*/
+int _d_2exp_comp(double a, long ap, double b, long bp);
+
+/**
+   \fn      void F_mpz_poly_CLD_bound(F_mpz_t res, F_mpz_poly_t f, ulong n)
+   \brief   A new approach for quickly, tightly, finding a bound on the size 
+            of the coefficient n of f*g'/g for any integer polynomial factor 
+            g of f. This function requires that the polynomial f be 
+            squarefree and that f is not divisible by x. 
+            If f is irreducible then the bound becomes f*f'/f = f'. So any
+            bound smaller than the coeff of x^c of f' can't be correct. 
+            (It is not unreasonable to expect the bound from this function to 
+            be close to the one we would get by taking the coefficient of 
+            f'. We don't test for this in the test code though, as we don't
+            have an explicit proven upper bound we can use. An eyeball test
+            does confirm that the bound being computed is reasonable though.)
+            The algorithm implemented is described in Algorithm 6 of
+            "Practical polynomial factoring in polynomial time" by Mark van
+            Hoeij, Andy Novocin and William Hart, see:
+            http://andy.novocin.com/issac/ISSAC_rewrite_mar_31.pdf      
+            Concept is based on the fact that h = sum over all roots of g 
+            (alpha_i) of (f / (x-alpha_i))  Every root alpha_i has some 
+            abs_val in R.For every possible value of r either 
+            B1 = 1/r^(n+1)(a_0 + a_1 r + ... + a_n r^n) or 
+            B2 = 1/r^(n+1)(a_{n+1} r^(n+1) + ... + a_(N) r^N) 
+            is an upper bound for the coefficient of x^n in f/(x - alpha) 
+            where N is the degree of f, a_i is the absolute value of the 
+            i'th coeff of f. So we begin with r = 2^0 evaluate B1 and B2 
+            and either make r = 2^(-1) or 2^(1) and continue to increase 
+            of decrease r until they flip-flop then we refine the severity 
+            of our power adjustment (now adjust by 1/2, 1/4, etc) until B1 
+            and B2 are relatively close (within a factor 1.5 of each other).  
+            This bound must then be multiplied by N the largest possible 
+            degree of a factor of f.
+
+*/
+void F_mpz_poly_CLD_bound(F_mpz_t res, F_mpz_poly_t f, ulong n);
+
+/*============================================================================
+
+   Naive '_modp' ( := Large moduli ) F_mpz_poly functions
+
+============================================================================*/
+
+/**
+   \fn      void F_mpz_poly_div_trunc_modp( F_mpz_t *res, F_mpz_poly_t f, 
+                F_mpz_poly_t g, F_mpz_t P, ulong n)
+   \brief   A power series modp division.  Using only n coeffs of f and g
+               finds the lowest n coeffs of f/g assuming the remainder of f/g
+               is 0 mod p. (Designed for padic CLDs) Right now if the trailing
+               coeff of g is not invertible mod p then it resorts to a full
+                division.  Want to find a way around that.  Returns 0 if problem
+*/
+int F_mpz_poly_div_trunc_modp( F_mpz_t *res, F_mpz_poly_t f, 
+                F_mpz_poly_t g, F_mpz_t P, ulong n);
+
+/**
+   \fn      void F_mpz_poly_div_upper_trunc_modp( F_mpz_t *res, F_mpz_poly_t f,
+                F_mpz_poly_t g, F_mpz_t P, ulong n)
+   \brief   Reversed power series division modp.  Using only the top n coeffs of 
+               f and g finds the top n coeffs of f/g mod p, assuming that the 
+               remainder of f/g is zero mod p.  (Designed for padic CLDS) Right 
+               now, if the leading coeff of g is not invertible mod p then 
+               does full division.  In the intended factoring uses g is monic.
+*/
+void F_mpz_poly_div_upper_trunc_modp( F_mpz_t *res, F_mpz_poly_t f, 
+               F_mpz_poly_t g, F_mpz_t P, ulong n);
+
+/*============================================================================
+
+   Square-Free Factorization
+
+============================================================================*/
+
+/**
+   \fn      void F_mpz_poly_squarefree(F_mpz_poly_factor_t fac, 
+               F_mpz_t content, F_mpz_poly_t F)
+   \brief   Given poly F, finds the content of F which is stores at content,
+               then finds a squarefree factorization stored at fac with exponents
+*/
+void F_mpz_poly_squarefree(F_mpz_poly_factor_t fac, 
+               F_mpz_t content, F_mpz_poly_t F);
+
+/*****************************************************************************
+
+   NTL based Hensel Lifting procedures using F_mpz_mod_polys
+
+*****************************************************************************/
+
+void F_mpz_poly_build_hensel_tree(long *link, F_mpz_poly_t *v, F_mpz_poly_t *w, zmod_poly_factor_t fac);
+
+void F_mpz_poly_hensel_lift(F_mpz_poly_t Gout, F_mpz_poly_t Hout, F_mpz_poly_t Aout, F_mpz_poly_t Bout, F_mpz_poly_t f, F_mpz_poly_t g, F_mpz_poly_t h, F_mpz_poly_t a, F_mpz_poly_t b, F_mpz_t p, F_mpz_t p1, F_mpz_t big_P);
+
+void F_mpz_poly_hensel_lift_without_inverse(F_mpz_poly_t Gout, F_mpz_poly_t Hout, F_mpz_poly_t f, F_mpz_poly_t g, F_mpz_poly_t h, F_mpz_poly_t a, F_mpz_poly_t b, F_mpz_t p, F_mpz_t p1, F_mpz_t big_P);
+
+void F_mpz_poly_hensel_lift_only_inverse(F_mpz_poly_t Aout, F_mpz_poly_t Bout, F_mpz_poly_t f, F_mpz_poly_t G, F_mpz_poly_t H, F_mpz_poly_t a, F_mpz_poly_t b, F_mpz_t p, F_mpz_t p1, F_mpz_t big_P);
+
+void F_mpz_poly_rec_tree_hensel_lift(long *link, F_mpz_poly_t *v, F_mpz_poly_t *w, F_mpz_t p, F_mpz_poly_t f, long j, long inv, F_mpz_t p1, F_mpz_t big_P);
+
+void F_mpz_poly_tree_hensel_lift(long *link, F_mpz_poly_t *v, F_mpz_poly_t *w, long e0, long e1, F_mpz_poly_t monic_f, long inv, long p, long r, F_mpz_t P);
+
+ulong _F_mpz_poly_start_hensel_lift(F_mpz_poly_factor_t lifted_fac, long * link, F_mpz_poly_t * v, F_mpz_poly_t * w, F_mpz_poly_t f, zmod_poly_factor_t local_fac, ulong target_exp);
+
+ulong _F_mpz_poly_continue_hensel_lift(F_mpz_poly_factor_t lifted_fac, long * link, F_mpz_poly_t * v, F_mpz_poly_t * w, F_mpz_poly_t f, ulong prev_exp, ulong current_exp, ulong target_exp, ulong p, ulong r);
+
+void F_mpz_poly_hensel_lift_once( F_mpz_poly_factor_t lifted_fac, F_mpz_poly_t F, zmod_poly_factor_t local_fac, ulong target_exp);
+
+/***************************************************
+
+   Naive Zassenhaus
+
+***************************/
+
+/**
+   This guy is unoptimized.  Takes Hensel lifted factors to power P, the original polynomial F (and it's squarefree exponent),
+    and for some reason a leading coeff which might not be needed... I'll check later, this is devel stuff here.
+*/
+void F_mpz_poly_zassenhaus_naive(F_mpz_poly_factor_t final_fac, F_mpz_poly_factor_t lifted_fac, F_mpz_poly_t F, F_mpz_t P, ulong exp, F_mpz_t lc);
+
+/*********
+
+   Factoring wrapper after square free part
+
+*********/
+
+/*
+   This is a wrapper which makes some choices about primes, Hensel lifting, Zassenhaus, this is the wrapper which does the real
+   stuff.  Call it after squarefree factoring with your square free f and it's eventual exponent.
+*/
+
+void F_mpz_poly_factor_sq_fr_prim( F_mpz_poly_factor_t final_fac, ulong exp, F_mpz_poly_t f );
+
+/*==================================
+   Finally the real F_mpz_poly_factor
+==================================*/
+
+/**
+   Doesn't do much, just does some simple pretests squarefree factors and calls the wrapper.
+*/
+void F_mpz_poly_factor(F_mpz_poly_factor_t final_fac, F_mpz_t cong, F_mpz_poly_t G);
+
+/*===========
+
+   Hoeij/Novocin approach
+
+=========*/
+
+/*
+   Has one sub-optimal part, namely we need F_mpz_poly_mul_trunc and left_trunc.  This computes bounds for and the CLDs themselves.
+   Stores them in a matrix res which comes out with r + 1 rows and 2*N or length-1 columns
+   (if 2N is smaller then length -1 then just top N and bottom N).  Takes F, Hensel Lifted factors, P and N, in the case we don't choose N large enough 
+   we 'could' adapt for restarting... maybe...
+*/
+void _F_mpz_poly_factor_CLD_mat(F_mpz_mat_t res, F_mpz_poly_t F, F_mpz_poly_factor_t lifted_fac, F_mpz_t P, ulong N);
+
+/*
+   This function recieves the output of check_if_solved, which means that there is a partition of the factors out there which makes things small.  
+   This function does the trial divisions attempting to solve the problem.  Lots of comments in there, and would like to do some specific testing
+   with poorly behaving polynomials.
+*/
+int _F_mpz_poly_try_to_solve(int num_facs, ulong * part, F_mpz_poly_factor_t final_fac, F_mpz_poly_factor_t lifted_fac, F_mpz_poly_t F, F_mpz_t P, ulong exp, F_mpz_t lc, int safe);
+
+/*
+   The complement function to try_to_solve.  Run this first, it is a factorization specific wrapper around F_mpz_mat_col_partition.
+*/
+int _F_mpz_mat_check_if_solved(F_mpz_mat_t M, ulong r, F_mpz_poly_factor_t final_fac, F_mpz_poly_factor_t lifted_fac, F_mpz_poly_t F, F_mpz_t P, ulong exp, F_mpz_t lc, int safe);
+
+/*
+   The actual factoring algorithm.  Set up to accept a prestarted matrix M (use the identity at first) and an array of exponents (0's at first).  
+   Attempts to factor the polynomial using all of the data that is available with the current level of Hensel Lifting.  Attempting with a spattering of 
+   data at first then using more if it fails.  Returns 1 if the problem has been solved and 0 if more Hensel Lifting is needed.  
+   Could be improved by not rechecking data and a partial Zassenhaus for some bizarre cases (which I've yet to find or test).
+*/
+int F_mpz_poly_factor_sq_fr_vHN(F_mpz_poly_factor_t final_fac, F_mpz_poly_factor_t lifted_fac, F_mpz_poly_t F, F_mpz_t P, ulong exp, F_mpz_mat_t M, int * cexpo, long U_exp, int hensel_loops);
 
 #ifdef __cplusplus
  }

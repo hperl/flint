@@ -33,9 +33,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <gmp.h>
+#ifndef __TINYC__
+#include <mpfr.h>
+#endif
 #include "flint.h"
 #include "mpn_extras.h"
 #include "zn_poly/src/zn_poly.h"
+
 
 /* 
    F_mpz_t type
@@ -264,10 +268,61 @@ void F_mpz_get_mpz(mpz_t x, const F_mpz_t f);
 double F_mpz_get_d_2exp(long * exp, const F_mpz_t f);
 
 /** 
+   \fn     double F_mpz_get_d(const F_mpz_t f)
+   \brief  Return f as a signed double. The usual exponent limits for
+           doubles apply. The value is truncated (rounded towards zero).
+*/
+double F_mpz_get_d(const F_mpz_t f);
+
+/** 
+   \fn     void F_mpz_set_d(F_mpz_t f, double d)
+   \brief  Set f to the integer part of the double d. 
+*/
+void F_mpz_set_d(F_mpz_t f, double d);
+
+/** 
+   \fn     void F_mpz_get_mpf(mpf_t m, const F_mpz_t f)
+   \brief  Sets m to the mpf_t value of f.
+*/
+void F_mpz_get_mpf(mpf_t m, const F_mpz_t f);
+
+/**
+   \fn     void F_mpz_set_d_2exp(F_mpz_t output, double mant, long exp)
+   \brief  Set output to the integer closest to mant*2^exp.
+*/
+void F_mpz_set_d_2exp(F_mpz_t output, double mant, long exp);
+
+/** 
    \fn     void F_mpz_set_mpz(F_mpz_t f, const mpz_t x)
    \brief  Sets f to the given mpz_t.
 */
 void F_mpz_set_mpz(F_mpz_t f, const mpz_t x);
+
+/** 
+   \fn     void F_mpz_get_mpfr(mpfr_t x, const F_mpz_t f)
+   \brief  Returns f as an mpfr_t to the current precision of x, 
+           rounded down if necessary.
+*/
+#ifndef __TINYC__
+void F_mpz_get_mpfr(mpfr_t x, const F_mpz_t f);
+#endif
+
+/** 
+   \fn     void F_mpz_set_mpfr(F_mpz_t f, const mpfr_t x)
+   \brief  Set the f to the value of the mpfr_t x, rounded down.
+*/
+#ifndef __TINYC__
+void F_mpz_set_mpfr(F_mpz_t f, const mpfr_t x);
+#endif
+
+/** 
+   \fn     int F_mpz_set_mpfr_2exp(const F_mpz_t f, const mpfr_t x)
+   \brief  Set the f to the stored mantissa of the mpfr_t x and return
+           an exponent exp so that x = f*2^exp.
+*/
+#ifndef __TINYC__
+int F_mpz_set_mpfr_2exp(F_mpz_t f, const mpfr_t x);
+#endif
 
 /** 
    \fn     void F_mpz_set_limbs(F_mpz_t f, const mp_limb_t * x, const ulong limbs)
@@ -307,7 +362,7 @@ void F_mpz_swap(F_mpz_t f, F_mpz_t g);
    \fn     int F_mpz_equal(const F_mpz_t f, const F_mpz_t g)
    \brief  Returns 1 if the two values are equal, otherwise returns 0.
 */
-int F_mpz_equal(const F_mpz_t f, const F_mpz_t g);
+int F_mpz_equal( F_mpz_t f,  F_mpz_t g);
 
 /** 
    \fn     int F_mpz_cmpabs(const F_mpz_t f, const F_mpz_t g)
@@ -401,10 +456,8 @@ void F_mpz_print(F_mpz_t x)
 {
 	if (!COEFF_IS_MPZ(*x)) printf("%ld", *x);
 	else 
-	{
-		
-		gmp_printf("%Zd", F_mpz_ptr_mpz(*x));
-		
+	{		
+		gmp_printf("%Zd", F_mpz_ptr_mpz(*x));	
 	}
 }
 
@@ -414,6 +467,19 @@ void F_mpz_print(F_mpz_t x)
 	        integer in decimal format.
 */
 void F_mpz_read(F_mpz_t f);
+
+/** 
+   \fn     F_mpz_sscanf(F_mpz_t f, char * str)
+   \brief  Read an F_mpz_t from the given string. The integer can be a signed 
+           multiprecision integer in decimal format.
+*/
+static inline
+void F_mpz_sscanf(F_mpz_t f, char * str)
+{
+   __mpz_struct * mpz_ptr = _F_mpz_promote(f);
+   gmp_sscanf(str, "%Zd", mpz_ptr);
+   _F_mpz_demote_val(f);
+}
 
 /*===============================================================================
 
@@ -449,7 +515,7 @@ void F_mpz_add(F_mpz_t f, const F_mpz_t g, const F_mpz_t h);
    \fn     void F_mpz_sub(F_mpz_t f, const F_mpz_t g, F_mpz_t h)
    \brief  Set f to g minus h. 
 */
-void F_mpz_sub(F_mpz_t f, const F_mpz_t g, F_mpz_t h);
+void F_mpz_sub(F_mpz_t f, const F_mpz_t g, const F_mpz_t h);
 
 /** 
    \fn     void F_mpz_mul_ui(F_mpz_t f, const F_mpz_t g, const ulong x)
@@ -531,6 +597,45 @@ ulong F_mpz_mod_ui(F_mpz_t f, const F_mpz_t g, const ulong h);
 void F_mpz_mod(F_mpz_t f, const F_mpz_t g, const F_mpz_t h);
 
 /** 
+   \fn     mp_limb_t * F_mpz_precompute_inverse(F_mpz_t p)
+   \brief  Returns a precomputed inverse of p (which must be positive)
+           for use with preinv functions.
+*/
+mp_ptr F_mpz_precompute_inverse(F_mpz_t p);
+
+/** 
+   \fn     void F_mpz_mod_preinv(F_mpz_t res, F_mpz_t f, 
+                                             F_mpz_t p, mp_srcptr pinv)
+   \brief  Given a precomputed inverse pinv of p, computes f mod p.
+*/
+void F_mpz_mod_preinv(F_mpz_t res, F_mpz_t f, F_mpz_t p, mp_srcptr pinv);
+
+/** 
+   \fn     void F_mpz_preinv_clear(mp_ptr pinv)
+   \brief  Free the memory allocated for a precomputed inverse.
+*/
+static inline
+void F_mpz_preinv_clear(mp_ptr pinv)
+{
+   free(pinv);
+}
+
+/**
+   \fn     void F_mpz_smod(F_mpz_t res, F_mpz_t f, F_mpz_t p)
+   \brief  Computes res in (-p/2, p/2] which is equivalent to f mod p.
+           We require that p is positive.
+*/
+void F_mpz_smod(F_mpz_t res, F_mpz_t f, F_mpz_t p);
+
+/** 
+   \fn     void F_mpz_smod_preinv(F_mpz_t res, F_mpz_t f, 
+                                               F_mpz_t p, mp_srcptr pinv)
+   \brief  Given a precomputed inverse pinv of p, computes f smod p.
+           We require that p is positive.
+*/
+void F_mpz_smod_preinv(F_mpz_t res, F_mpz_t f, F_mpz_t p, mp_srcptr pinv);
+
+/** 
    \fn     void F_mpz_gcd(F_mpz_t f, const F_mpz_t g, const F_mpz_t h)
    \brief  Set f to the greatest common divisor of g and h.
 */
@@ -580,6 +685,24 @@ void F_mpz_rdiv_q(F_mpz_t f, const F_mpz_t g, const F_mpz_t h);
    \brief  Set f to g^h where h is an unsigned long.
 */
 void F_mpz_pow_ui(F_mpz_t f, const F_mpz_t g, const ulong exp);
+
+
+/*===============================================================================
+
+	Modular arithmetic
+
+================================================================================*/
+
+/** 
+   \fn     void F_mpz_mulmod2(F_mpz_t f, F_mpz_t g, F_mpz_t h, F_mpz_t p)
+   \brief  Multiply g and h modulo p. Assumes f and p are not aliased.
+*/
+static inline
+void F_mpz_mulmod2(F_mpz_t f, const F_mpz_t g, const F_mpz_t h, const F_mpz_t p)
+{
+   F_mpz_mul2(f, g, h);
+   F_mpz_mod(f, f, p);
+}
 
 /*===============================================================================
 

@@ -63,11 +63,19 @@ double halfplus, onedothalfplus, ctt;
 #define DELTA 0.99
 #endif
 
+ulong getShift(F_mpz_mat_t B);
+
 void Babai (int kappa, F_mpz_mat_t B, double **mu, double **r, double *s, 
                             double **appB, int *expo, double **appSP, 
                          int a, int zeros, int kappamax, int n);
+
+void Babai_heuristic_d (int kappa, F_mpz_mat_t B, double **mu, double **r, double *s, 
+       double **appB, int *expo, double **appSP, 
+       int a, int zeros, int kappamax, int n);
                          
 void LLL (F_mpz_mat_t B);
+
+int LLL_heuristic_d_with_removal(F_mpz_mat_t B, F_mpz_t gs_B);
        
 #ifdef __cplusplus
  }

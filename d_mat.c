@@ -1,5 +1,6 @@
 /*
    Copyright 2005, 2006 Damien Stehlé.
+   Copyright 2010 William Hart.
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -17,26 +18,27 @@
    02111-1307, USA.
 */
 
+/****************************************************************************
+
+   d_mat.c: Vectors and matrices with double precision floating point entries.
+
+*****************************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <float.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-#include <ctype.h>
-#include <limits.h>
-#include <gmp.h>
 
 #include "d_mat.h"
 
-double ** d_mat_init(int d, int n)
+double ** d_mat_init(ulong r, ulong c)
 {
    double ** B;
 
-   B = (double **) malloc (d*sizeof(double*) + n*d*sizeof(double));
-   B[0] = (double *) (B + d);
-	for (long i = 1; i < d; i++) B[i] = B[i-1] + n;
+   B = (double **) malloc (r*sizeof(double*) + r*c*sizeof(double));
+   B[0] = (double *) (B + r);
+	long i;
+	for (i = 1; i < r; i++) B[i] = B[i-1] + c;
 
 	return B;
 }
@@ -46,44 +48,60 @@ void d_mat_clear(double ** B)
    free(B);
 }
 
-void d_mat_print(double ** B, int * expo, int d, int n) 
+void d_mat_print(double ** B, int * expo, ulong r, ulong c) 
 {
    long i, j; 
 
    printf("[");
-   for (i = 0; i < d; i++) 
+   for (i = 0; i < r; i++) 
    {
       printf("[");
-      for (j = 0; j < n; j++) 
+      for (j = 0; j < c; j++) 
       { 
          printf("%E", B[i][j]); 
-         if (j < n-1) printf(" "); 
+         if (j < c-1) printf(" "); 
       }
       printf("] * 2^%d\n", expo[i]); 
    }  
    printf("]\n"); 
 }
 
-double d_vec_scalar_product(double * vec1, double * vec2, int n)
+void _d_vec_add(double * r1, double * r2, double * r3, ulong n)
+{
+   ulong i;
+   for (i = 0; i < n; i++)
+	  r1[i] = r2[i] + r3[i];
+}
+
+void _d_vec_sub(double * r1, double * r2, double * r3, ulong n)
+{
+   ulong i;
+   for (i = 0; i < n; i++)
+	  r1[i] = r2[i] - r3[i];
+}
+
+double _d_vec_scalar_product(double * vec1, double * vec2, ulong n)
 {
   double sum;
 
   sum = vec1[0] * vec2[0];
-  for (long i = 1; i < n; i++)
+  long i;
+  for (i = 1; i < n; i++)
      sum += vec1[i] * vec2[i];
 
   return sum;
 } 
 
-double d_vec_norm(double * vec, int n)
+double _d_vec_norm(double * vec, ulong n)
 {
   double sum;
 
   sum = vec[0] * vec[0];
-  for (long i = 1 ; i < n ; i++)
+  long i;
+  for (i = 1 ; i < n ; i++)
      sum += vec[i] * vec[i];
 
   return sum;
-
 } 
+
 
