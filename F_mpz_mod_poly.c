@@ -859,3 +859,90 @@ void F_mpz_mod_poly_divrem_divconquer(F_mpz_mod_poly_t Q, F_mpz_mod_poly_t R, co
    F_mpz_mod_poly_clear(QB);
 }
 
+/****************************************************************************
+
+   GCD/resultant
+
+****************************************************************************/
+
+void F_mpz_mod_poly_gcd_euclidean(F_mpz_mod_poly_t res, F_mpz_mod_poly_t poly1, F_mpz_mod_poly_t poly2)
+{
+   F_mpz_mod_poly_t R, A, B;
+	F_mpz_poly_t r;
+	int steps = 0;
+   
+   if (poly1->length == 0) 
+	{
+      if (poly2->length == 0)
+		   F_mpz_mod_poly_zero(res);
+		else F_mpz_mod_poly_set(res, poly2);
+		return;
+   }
+
+	if (poly2->length == 0) 
+   {
+      F_mpz_mod_poly_set(res, poly1);
+      return;
+   }
+
+   if ((poly1->length == 1) || (poly2->length == 1))
+   {
+		_F_mpz_poly_attach_F_mpz_mod_poly(r, res);
+      F_mpz_poly_set_coeff_ui(r, 0, 1L);
+		_F_mpz_mod_poly_attach_F_mpz_poly(res, r);
+		_F_mpz_mod_poly_normalise(res);
+      return;
+   }
+   
+	F_mpz_t* p = (F_mpz_t*)*(poly1->P);
+
+   F_mpz_mod_poly_init(R, *p);
+
+   if (poly1->length > poly2->length)
+   {
+      _F_mpz_mod_poly_attach(A, poly1);
+      _F_mpz_mod_poly_attach(B, poly2);
+   } else
+   {
+      _F_mpz_mod_poly_attach(A, poly2);
+      _F_mpz_mod_poly_attach(B, poly1);
+   }
+
+   F_mpz_mod_poly_rem(R, A, B);
+
+   F_mpz_mod_poly_swap(A, B);
+   F_mpz_mod_poly_swap(B, R);
+   F_mpz_mod_poly_init(R, *p); 
+      
+	if (B->length > 1)
+	{
+		F_mpz_mod_poly_rem(R, A, B);
+      F_mpz_mod_poly_swap(A, B);
+      F_mpz_mod_poly_swap(B, R);
+      F_mpz_mod_poly_init(R, *p);
+		steps = 1;
+	}
+
+	while (B->length > 1)
+   {
+      F_mpz_mod_poly_rem(A, A, B);
+      F_mpz_mod_poly_swap(A, B); 
+   }
+      
+   if  (B->length == 1) 
+   {
+      _F_mpz_poly_attach_F_mpz_mod_poly(r, res);
+      F_mpz_poly_set_coeff_ui(r, 0, 1L);
+		_F_mpz_mod_poly_attach_F_mpz_poly(res, r);
+		_F_mpz_mod_poly_normalise(res);
+   }
+   else F_mpz_mod_poly_set(res, A);
+
+   if (steps) 
+   {
+      F_mpz_poly_clear(A);
+   } 
+
+   F_mpz_poly_clear(B);
+   F_mpz_poly_clear(R);
+}

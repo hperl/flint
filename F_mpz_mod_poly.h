@@ -140,6 +140,19 @@ void F_mpz_mod_poly_to_zmod_poly(zmod_poly_t zpol, const F_mpz_mod_poly_t fpol);
 
 ****************************************************************************/
 
+/*
+	Attach another F_mpz_mod_poly to an F_mpz_mod_poly.
+*/
+
+static inline
+void _F_mpz_mod_poly_attach(F_mpz_mod_poly_t out, const F_mpz_mod_poly_t in)
+{
+	out->coeffs = in->coeffs;
+	out->length = in->length;
+	out->alloc = in->alloc;
+	*(out->P) = *(in->P);
+}
+
 /* 
    Attach an F_mpz_mod_poly to an F_mpz_poly. Allows one to temporarily treat
    an F_mpz_mod_poly as though it were an F_mpz_poly.
