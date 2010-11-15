@@ -266,6 +266,19 @@ void F_mpz_mod_poly_print(F_mpz_mod_poly_t poly)
    mpz_poly_clear(m_poly);
 }
 
+static inline
+void F_mpz_mod_poly_print_pretty(F_mpz_mod_poly_t poly, const char * x)
+{
+   mpz_poly_t m_poly;
+   mpz_poly_init(m_poly);
+   F_mpz_poly_t pol;
+   _F_mpz_poly_attach_F_mpz_mod_poly(pol, poly);
+   F_mpz_poly_to_mpz_poly(m_poly, pol);
+   mpz_poly_print_pretty(m_poly, x);
+   printf(" : P = "); F_mpz_print(poly->P);
+   mpz_poly_clear(m_poly);
+}
+
 /*===============================================================================
 
 	Shifting
@@ -353,6 +366,22 @@ void F_mpz_mod_poly_mulmod( F_mpz_mod_poly_t res, F_mpz_mod_poly_t A, F_mpz_mod_
 
    F_mpz_mod_poly_clear(Q);
 }
+
+/****************************************************************************
+
+   Monic polys
+
+****************************************************************************/
+
+void F_mpz_mod_poly_make_monic(F_mpz_mod_poly_t output, F_mpz_mod_poly_t pol);
+
+/****************************************************************************
+
+   GCD/resultant
+
+****************************************************************************/
+
+void F_mpz_mod_poly_gcd_euclidean(F_mpz_mod_poly_t res, F_mpz_mod_poly_t poly1, F_mpz_mod_poly_t poly2);
 
 
 #ifdef __cplusplus
