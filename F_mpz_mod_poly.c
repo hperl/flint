@@ -861,6 +861,40 @@ void F_mpz_mod_poly_divrem_divconquer(F_mpz_mod_poly_t Q, F_mpz_mod_poly_t R, co
 
 /****************************************************************************
 
+   Monic polys
+
+****************************************************************************/
+
+void F_mpz_mod_poly_make_monic(F_mpz_mod_poly_t output, F_mpz_mod_poly_t pol)
+{
+   if (!pol->length) 
+   {
+      output->length = 0;
+      return;
+   }
+
+   F_mpz_t *lead_coeff = (F_mpz_t *)&pol->coeffs[pol->length-1];
+
+   if (F_mpz_is_one(*lead_coeff))
+   {
+      F_mpz_mod_poly_set(output, pol);
+      return;
+   }
+   F_mpz_t lead_inv;
+   F_mpz_init(lead_inv);
+   
+   F_mpz_invert(lead_inv, *lead_coeff, pol->P);
+   F_mpz_mod_poly_scalar_mul(output, pol, lead_inv);
+
+   // printf("\nlead_coeff = "); F_mpz_print(*lead_coeff);   
+   // printf("\nlead_inv   = "); F_mpz_print(lead_inv);
+   // printf("\npol        = "); F_mpz_mod_poly_print_pretty(pol, "x");
+   // printf("\noutput     = "); F_mpz_mod_poly_print_pretty(output, "x");
+   // printf("\n-------------------------------------\n");
+}
+
+/****************************************************************************
+
    GCD/resultant
 
 ****************************************************************************/
@@ -875,13 +909,13 @@ void F_mpz_mod_poly_gcd_euclidean(F_mpz_mod_poly_t res, F_mpz_mod_poly_t poly1, 
 	{
       if (poly2->length == 0)
 		   F_mpz_mod_poly_zero(res);
-		else F_mpz_mod_poly_set(res, poly2);
+		else F_mpz_mod_poly_make_monic(res, poly2);
 		return;
    }
 
 	if (poly2->length == 0) 
    {
-      F_mpz_mod_poly_set(res, poly1);
+      F_mpz_mod_poly_make_monic(res, poly1);
       return;
    }
 
@@ -894,9 +928,11 @@ void F_mpz_mod_poly_gcd_euclidean(F_mpz_mod_poly_t res, F_mpz_mod_poly_t poly1, 
       return;
    }
    
-	F_mpz_t* p = (F_mpz_t*)*(poly1->P);
+	F_mpz_t P;
+   F_mpz_init(P);
+   F_mpz_set(P, poly1->P);
 
-   F_mpz_mod_poly_init(R, *p);
+   F_mpz_mod_poly_init(R, P);
 
    if (poly1->length > poly2->length)
    {
@@ -912,14 +948,14 @@ void F_mpz_mod_poly_gcd_euclidean(F_mpz_mod_poly_t res, F_mpz_mod_poly_t poly1, 
 
    F_mpz_mod_poly_swap(A, B);
    F_mpz_mod_poly_swap(B, R);
-   F_mpz_mod_poly_init(R, *p); 
+   F_mpz_mod_poly_init(R, P); 
       
 	if (B->length > 1)
 	{
 		F_mpz_mod_poly_rem(R, A, B);
       F_mpz_mod_poly_swap(A, B);
       F_mpz_mod_poly_swap(B, R);
-      F_mpz_mod_poly_init(R, *p);
+      F_mpz_mod_poly_init(R, P);
 		steps = 1;
 	}
 
@@ -934,15 +970,15 @@ void F_mpz_mod_poly_gcd_euclidean(F_mpz_mod_poly_t res, F_mpz_mod_poly_t poly1, 
       _F_mpz_poly_attach_F_mpz_mod_poly(r, res);
       F_mpz_poly_set_coeff_ui(r, 0, 1L);
 		_F_mpz_mod_poly_attach_F_mpz_poly(res, r);
-		_F_mpz_mod_poly_normalise(res);
+      res->length = 1;
    }
-   else F_mpz_mod_poly_set(res, A);
+   else F_mpz_mod_poly_make_monic(res, A);
 
    if (steps) 
    {
-      F_mpz_poly_clear(A);
+      F_mpz_mod_poly_clear(A);
    } 
 
-   F_mpz_poly_clear(B);
-   F_mpz_poly_clear(R);
+   F_mpz_mod_poly_clear(B);
+   F_mpz_mod_poly_clear(R);
 }
