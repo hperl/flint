@@ -32,6 +32,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <gmp.h>
+#include <mpfr.h>
+
 #include "mpn_extras.h"
 #include "flint.h"
 #include "mpz_mat.h"
@@ -120,10 +122,65 @@ void F_mpz_mat_resize(F_mpz_mat_t mat, const ulong r, const ulong c);
 ================================================================================*/
 
 /** 
+   \fn     int F_mpz_mat_from_string(F_mpz_mat_t mat, const char *s)
+	\brief  Read an F_mpz_mat_t from a string
+*/
+int F_mpz_mat_from_string(F_mpz_mat_t mat, const char *s);
+
+/** 
+   \fn     char* F_mpz_mat_to_string(F_mpz_mat_t mat)
+	\brief  Write an F_mpz_mat_t to a string
+*/
+char* F_mpz_mat_to_string(F_mpz_mat_t mat);
+
+/** 
+   \fn     int F_mpz_mat_from_string_pretty(F_mpz_mat_t mat, char *s)
+	\brief  Read an F_mpz_mat_t from a string in pretty format
+*/
+int F_mpz_mat_from_string_pretty(F_mpz_mat_t mat, char *s);
+
+/** 
+   \fn     char* F_mpz_mat_to_string_pretty(F_mpz_mat_t mat)
+	\brief  Write an F_mpz_mat_t to a string in pretty format
+*/
+char* F_mpz_mat_to_string_pretty(F_mpz_mat_t mat);
+
+/** 
    \fn     void F_mpz_mat_print(F_mpz_mat_t mat)
    \brief  Print an F_mpz_mat to stdout.
 */
 void F_mpz_mat_print(F_mpz_mat_t mat);
+
+/** 
+   \fn     void F_mpz_mat_print_pretty(F_mpz_mat_t mat)
+	\brief  Prints an F_mpz_mat_t to the screen in pretty format
+*/
+void F_mpz_mat_print_pretty(F_mpz_mat_t mat);
+
+/** 
+   \fn     void F_mpz_mat_fprint(F_mpz_mat_t mat, FILE* f)
+	\brief  Prints an F_mpz_mat_t to a file stream
+*/
+void F_mpz_mat_fprint(F_mpz_mat_t mat, FILE* f);
+
+/** 
+   \fn     void F_mpz_mat_fprint_pretty(F_mpz_mat_t mat, FILE* f)
+	\brief  Prints an F_mpz_mat_t to a file stream in pretty format
+*/
+void F_mpz_mat_fprint_pretty(F_mpz_mat_t mat, FILE* f);
+
+/** 
+   \fn     int F_mpz_mat_fread(F_mpz_mat_t mat, FILE* f)
+	\brief  Read an F_mpz_mat_t from a file stream
+*/
+int F_mpz_mat_fread(F_mpz_mat_t mat, FILE* f);
+
+/** 
+   \fn     int F_mpz_mat_fread_pretty(F_mpz_mat_t mat, FILE* f)
+	\brief  Read a F_mpz_mat_t from a file stream in pretty format
+                                       useful with fpLLL's generate function
+*/
+int F_mpz_mat_fread_pretty(F_mpz_mat_t mat, FILE* f);
 
 /*===============================================================================
 
@@ -149,6 +206,18 @@ void F_mpz_mat_to_mpz_mat(mpz_mat_t m_mat, const F_mpz_mat_t F_mat);
 	        with respect to a single maximum exponent which is returned.
 */
 long F_mpz_mat_set_line_d(double * appv, const F_mpz_mat_t mat, const ulong r, const int n);
+
+/** 
+   \fn     void F_mpz_mat_set_line_mpfr(mpfr_t * appv, const F_mpz_mat_t mat, const ulong r, const int n)
+   \brief  Sets the entries of appv to the entries of the given row of mat.
+*/
+void F_mpz_mat_set_line_mpfr(mpfr_t * appv, const F_mpz_mat_t mat, const ulong r, const int n);
+
+/**
+   \fn     void F_mpz_mat_set_line_mpfr_2exp(mpfr_t * appv, const F_mpz_mat_t mat, const ulong r, const int n, int * cexpo)
+   \brief  Sets the entries of appv to the entries of the given for of mat multiplied by 2^cexpo[i]
+*/
+void F_mpz_mat_set_line_mpfr_2exp(mpfr_t * appv, const F_mpz_mat_t mat, const ulong r, const int n, int * cexpo);
 
 /*===============================================================================
 
@@ -319,6 +388,15 @@ void F_mpz_mat_row_addmul_2exp_ui(F_mpz_mat_t mat1, ulong r1, F_mpz_mat_t mat2, 
 void F_mpz_mat_row_submul_2exp_ui(F_mpz_mat_t mat1, ulong r1, F_mpz_mat_t mat2, ulong r2, 
 								               ulong start, ulong n, ulong c, ulong exp);
 
+/** 
+   \fn     void F_mpz_mat_row_submul_2exp_F_mpz(F_mpz_mat_t mat1, ulong r1, F_mpz_mat_t mat2, ulong r2, 
+								               ulong start, ulong n, F_mpz_t c, ulong exp)
+
+	\brief  Multiply entry from row r2 of mat2 by c*2^exp and subtract from entry from row r1 of mat1.
+	        
+*/
+void F_mpz_mat_row_submul_2exp_F_mpz(F_mpz_mat_t mat1, ulong r1, F_mpz_mat_t mat2, ulong r2, 
+								               ulong start, ulong n, F_mpz_t c, ulong exp);
 
 /** 
    \fn     void F_mpz_mat_row_swap(F_mpz_mat_t mat1, ulong r1, F_mpz_mat_t mat2, 
@@ -339,6 +417,131 @@ void F_mpz_mat_row_swap(F_mpz_mat_t mat1, ulong r1, F_mpz_mat_t mat2,
 void F_mpz_mat_row_neg(F_mpz_mat_t mat1, ulong r1, F_mpz_mat_t mat2, 
 								                          ulong r2, ulong start, ulong n);
 
+/* ======================================================================================================
+  Classical Multiplication for F_mpz_mat.h
+
+=========================================================================================================*/
+
+/** 
+   \fn     void _F_mpz_mat_mul_classical(F_mpz_mat_t res, const F_mpz_mat_t mat1,
+                                                  const F_mpz_mat_t mat2)
+
+	\brief  Classical multiplication of F_mpz_mat_t's mat1 and mat2 set result to res
+                                                  not alias safe	        
+*/
+void _F_mpz_mat_mul_classical(F_mpz_mat_t res, const F_mpz_mat_t mat1,
+                                                  const F_mpz_mat_t mat2);
+
+/** 
+   \fn     static inline
+           void F_mpz_mat_mul_classical(F_mpz_mat_t P, const F_mpz_mat_t A,
+                                                  const F_mpz_mat_t B)
+
+	\brief  Classical multiplication of F_mpz_mat_t's mat1 and mat2 set result to res	        
+                                                  alias safe
+*/
+static inline
+void F_mpz_mat_mul_classical(F_mpz_mat_t P, const F_mpz_mat_t A,const F_mpz_mat_t B)
+{
+
+	if ((P == A) || (P == B))
+	{
+		F_mpz_mat_t Pa;
+		F_mpz_mat_init(Pa,P->r,P->c);
+      _F_mpz_mat_mul_classical(Pa, A, B);
+		F_mpz_mat_set(P, Pa);
+		F_mpz_mat_clear(Pa);
+		return;
+	} else
+	   return _F_mpz_mat_mul_classical(P, A, B);
+}
+
+/*===========================================================
+
+   assorted new functions
+
+===========================================================*/
+
+/*
+   A duplicate of the F_mpz_poly version but uses ghetto math in the middle 
+*/
+long F_mpz_mat_max_bits(const F_mpz_mat_t M);
+
+/*
+   Divides M by the scalar 2^n and stores at res.  Truncates each entry with F_mpz_div_2exp.
+*/
+void F_mpz_mat_scalar_div_2exp(F_mpz_mat_t res, F_mpz_mat_t M, ulong n);
+
+/*
+   Scalar multiplication by a power of 2.  res = M * 2^n.
+*/
+void F_mpz_mat_scalar_mul_2exp(F_mpz_mat_t res, F_mpz_mat_t M, ulong n);
+
+/*
+   Sets res to the top n bits of each entry of M.  Returns a ulong exp such that
+   res = round_to_zero(M/2^exp)
+*/
+ulong F_mpz_mat_upper_trunc_n(F_mpz_mat_t res, F_mpz_mat_t M, ulong n);
+
+/*
+   Sets res to the bottom n bits of each entry of M.  Designed to work with F_mpz_mat_upper_trunc_n
+   so that one can split a matrix M into two halfs so M = upper_M*2^exp + lower_M
+*/
+void F_mpz_mat_lower_trunc_n(F_mpz_mat_t res, F_mpz_mat_t M, ulong n);
+
+/*
+   Compares column a and column b of M returns 1 if they are the same and 0 otherwise
+*/
+int F_mpz_mat_column_compare(F_mpz_mat_t M, ulong a, ulong b);
+
+/*
+   A fast test for a basis of M using only 0's and a single 1 per column, if it's possible the function returns np
+   the number of needed rows (in the case of factoring this is a proven bound on the number of factors) and part
+   will be filled with the numbers 1 through np and all numbers of value i will be one's in row i of the special basis.
+   If it is not possible then the function returns 0.
+*/
+int F_mpz_mat_check_0_1(ulong *part, F_mpz_mat_t M);
+
+/*
+   Designed for the factoring applications.  Given matrix M takes the sub matrix of size M->r x d starting at M[0,0].
+   Used for getting the transformation matrix out of knapsack lattices.
+*/
+void F_mpz_mat_get_U(F_mpz_mat_t U, F_mpz_mat_t M, ulong d);
+
+/*
+   Uses F_mpz_smod to reduce each entry in M mod P taking the representative in (-P/2, P/2]
+*/
+void F_mpz_mat_smod(F_mpz_mat_t res, F_mpz_mat_t M, F_mpz_t P);
+
+/*
+   Simple naive function, uses F_mpz_mat_resize then shifts the new zero rows to the top rather than bottom.
+*/
+void F_mpz_mat_resize2(F_mpz_mat_t M, ulong r, ulong c);
+
+/*
+   This is the heart of the Novocin PhD algorithm.  Takes a column of data col, a large modulus P, and an upperbound for
+   the data in a good vector with exp.  Decides if it's worth calling LLL with this data, if not it returns 0, if so it adjusts 
+   M in place by truncating the data, augmenting M, and returning the virtual weight of the final column.  May or may not add a row
+   for P, based on a rough estimation.
+*/
+int _F_mpz_mat_next_col(F_mpz_mat_t M, F_mpz_t P, F_mpz_mat_t col, long exp);
+
+/** 
+   \fn     void F_mpz_mat_row_scalar_product(F_mpz_t sp, F_mpz_mat_t mat1, ulong r1, 
+                                  F_mpz_mat_t mat2, ulong r2, ulong start, ulong n)
+
+	\brief  Set sp to the scalar product of row r1 of mat1 and row r2 of mat2.
+*/
+void F_mpz_mat_row_scalar_product(F_mpz_t sp, F_mpz_mat_t mat1, ulong r1, 
+                                  F_mpz_mat_t mat2, ulong r2, ulong start, ulong n);
+
+/**
+   \fn     long F_mpz_mat_row_scalar_product_2exp(F_mpz_t sp, F_mpz_mat_t mat1, ulong r1, 
+                                  F_mpz_mat_t mat2, ulong r2, ulong start, ulong n, int * cexpo)
+   \brief  Set sp*2^(returned long) to the scalar product of row r1 of mat1 and row r2 of mat2 with cexpo as an array of additional 2 power weights
+*/
+long F_mpz_mat_row_scalar_product_2exp(F_mpz_t sp, F_mpz_mat_t mat1, ulong r1, 
+                                  F_mpz_mat_t mat2, ulong r2, ulong start, ulong n, int * cexpo);
 
 #ifdef __cplusplus
  }

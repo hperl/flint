@@ -13,7 +13,7 @@ elif [ "`uname -m`" = "ia64" ]; then
    # Kate Minola.
    FLINT_TUNE=" "
 else
-   FLINT_TUNE="-funroll-loops "
+   FLINT_TUNE="-g -funroll-loops "
 fi
 
 if [ "`uname`" = "Darwin" ]; then
@@ -63,12 +63,12 @@ export LD_LIBRARY_PATH
 
 if [ -z "$FLINT_NTL_INCLUDE_DIR" ]
 then
-        FLINT_NTL_INCLUDE_DIR="/home/was/sage/local/include"
+        FLINT_NTL_INCLUDE_DIR="/usr/local/include"
 fi
 export FLINT_NTL_INCLUDE_DIR
 
 if [ -z "$FLINT_NTL_LIB_DIR" ]
 then
-        FLINT_NTL_LIB_DIR="/home/was/sage/local/include"
+        FLINT_NTL_LIB_DIR="/usr/local/lib"
 fi
 export FLINT_NTL_LIB_DIR

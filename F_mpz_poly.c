@@ -45,6 +45,9 @@
 #include "ZmodF_poly.h"
 #include "long_extras.h"
 #include "zmod_poly.h"
+#include "F_mpz_mat.h"
+#include "F_mpz_LLL_fast_d.h"
+#include "F_mpz_LLL_heuristic_mpfr.h"
 
 /*===============================================================================
 
@@ -114,6 +117,66 @@ void F_mpz_poly_clear(F_mpz_poly_t poly)
    for (ulong i = 0; i < poly->alloc; i++) // Clean up any mpz_t's
 		_F_mpz_demote(poly->coeffs + i);
 	if (poly->coeffs) flint_heap_free(poly->coeffs); // clean up ordinary coeffs
+}
+
+void F_mpz_poly_factor_init(F_mpz_poly_factor_t fac)
+{
+
+   fac->alloc = 5;
+   fac->num_factors = 0;
+   fac->factors = (F_mpz_poly_t *) flint_heap_alloc_bytes(sizeof(F_mpz_poly_t)*5);
+   fac->exponents = (unsigned long *) flint_heap_alloc(5);
+   for (unsigned long i = 0; i < 5; i++)
+	   F_mpz_poly_init(fac->factors[i]);
+}
+
+void F_mpz_poly_factor_clear(F_mpz_poly_factor_t fac)
+{
+	for (unsigned long i = 0; i < fac->alloc; i++)
+	   F_mpz_poly_clear(fac->factors[i]);
+	free(fac->factors);
+	free(fac->exponents);
+}
+
+/*===============================================================================
+
+   F_mpz_poly_factor_t
+
+================================================================================*/
+
+void F_mpz_poly_factor_insert(F_mpz_poly_factor_t fac, F_mpz_poly_t poly, unsigned long exp)
+{
+   if (poly->length <= 1) return;   
+// how much space left in the array?, 
+// if none make a new one twice as big (for efficiency) and copy contents across
+   if(fac->alloc == fac->num_factors)
+   {
+      fac->factors = (F_mpz_poly_t *) flint_heap_realloc_bytes(fac->factors, sizeof(F_mpz_poly_t)*2*fac->alloc);
+      fac->exponents = (unsigned long *) flint_heap_realloc(fac->exponents, 2*fac->alloc);
+      for (unsigned long i = fac->alloc; i < 2*fac->alloc; i++)
+         F_mpz_poly_init(fac->factors[i]);
+      fac->alloc = 2*fac->alloc;
+   } 
+
+   F_mpz_poly_set(fac->factors[fac->num_factors], poly);
+   fac->exponents[fac->num_factors] = exp;
+   fac->num_factors++;
+
+}
+
+void F_mpz_poly_factor_concat(F_mpz_poly_factor_t res, F_mpz_poly_factor_t fac)
+{
+   for(unsigned long i = 0; i < fac->num_factors; i++)
+      F_mpz_poly_factor_insert(res, fac->factors[i], fac->exponents[i]);
+}
+
+void F_mpz_poly_factor_print(F_mpz_poly_factor_t fac)
+{
+   for(unsigned long i = 0; i < fac->num_factors; i++)
+   {
+      F_mpz_poly_print(fac->factors[i]); 
+      printf(" ^ %ld\n", fac->exponents[i]);
+   }	
 }
 
 /*===============================================================================
@@ -237,6 +300,54 @@ void F_mpz_poly_to_mpz_poly(mpz_poly_t m_poly, const F_mpz_poly_t F_poly)
 	   F_mpz_get_mpz(m_poly->coeffs[i], F_poly->coeffs + i);
 }
 
+void F_mpz_poly_to_zmod_poly(zmod_poly_t zpol, const F_mpz_poly_t fpol)
+{
+   unsigned long p = zpol->p;
+
+   if (fpol->length == 0) 
+   {
+      zmod_poly_zero(zpol);
+      return;
+   } 
+
+   F_mpz_t temp;
+   F_mpz_init(temp);
+   
+   zmod_poly_fit_length(zpol, fpol->length);
+   zpol->length = fpol->length;
+   
+   for (unsigned long i = 0; i < fpol->length; i++)
+   {
+      *(zpol->coeffs + i) = F_mpz_mod_ui(temp, fpol->coeffs + i, p);
+   }
+
+   __zmod_poly_normalise(zpol);
+
+   F_mpz_clear(temp);
+}
+
+void zmod_poly_to_F_mpz_poly(F_mpz_poly_t fpol, const zmod_poly_t zpol)
+{
+   unsigned long p = zpol->p;
+
+   if (zpol->length == 0) 
+   {
+      F_mpz_poly_zero(fpol);
+      return;
+   } 
+   
+   F_mpz_poly_fit_length(fpol, zpol->length);
+   fpol->length = zpol->length;
+   
+   for (unsigned long i = 0; i < zpol->length; i++)
+   {
+      F_mpz_set_si(fpol->coeffs+i, zpol->coeffs[i]);
+   }
+
+   _F_mpz_poly_normalise(fpol);
+
+}
+
 /*===============================================================================
 
        Input/output 
@@ -250,6 +361,63 @@ int F_mpz_poly_from_string(F_mpz_poly_t poly, const char* s)
    mpz_poly_t p;
    mpz_poly_init(p);
    ok = mpz_poly_from_string(p, s);
+   if (ok)
+   {
+      mpz_poly_to_F_mpz_poly(poly, p);
+   }
+   mpz_poly_clear(p);
+   
+   return ok;
+}
+
+char* F_mpz_poly_to_string(const F_mpz_poly_t poly)
+{
+   char* buf;
+   mpz_poly_t m_poly;
+   mpz_poly_init(m_poly);
+   F_mpz_poly_to_mpz_poly(m_poly, poly);
+   buf = mpz_poly_to_string(m_poly);
+   mpz_poly_clear(m_poly);
+   return buf;
+}
+
+char* F_mpz_poly_to_string_pretty(const F_mpz_poly_t poly, const char * x)
+{
+   char* buf;
+   mpz_poly_t m_poly;
+   mpz_poly_init(m_poly);
+   F_mpz_poly_to_mpz_poly(m_poly, poly);
+   buf = mpz_poly_to_string_pretty(m_poly, x);
+   mpz_poly_clear(m_poly);
+   return buf;
+}
+
+void F_mpz_poly_fprint(const F_mpz_poly_t poly, FILE* f)
+{
+   char* s = F_mpz_poly_to_string(poly);
+   fputs(s, f);
+   free(s);
+}
+
+void F_mpz_poly_fprint_pretty(const F_mpz_poly_t poly, FILE* f, const char * x)
+{
+   char* s = F_mpz_poly_to_string_pretty(poly, x);
+   fputs(s, f);
+   free(s);
+}
+
+void F_mpz_poly_print_pretty(const F_mpz_poly_t poly, const char * x)
+{
+   F_mpz_poly_fprint_pretty(poly, stdout, x);
+}
+
+int F_mpz_poly_fread(F_mpz_poly_t poly, FILE* f)
+{
+   int ok;
+   
+   mpz_poly_t p;
+   mpz_poly_init(p);
+   ok = mpz_poly_fread(p, f);
    if (ok)
    {
       mpz_poly_to_F_mpz_poly(poly, p);
@@ -3963,7 +4131,7 @@ void F_mpz_poly_mul_SS(F_mpz_poly_t res, const F_mpz_poly_t poly1, const F_mpz_p
 
 ================================================================================*/
 
-void _F_mpz_poly_mul(F_mpz_poly_t output, F_mpz_poly_t input1, F_mpz_poly_t input2)
+void _F_mpz_poly_mul(F_mpz_poly_t output, const F_mpz_poly_t input1, const F_mpz_poly_t input2)
 {
    if ((input1->length == 0) || (input2->length == 0)) // special case, length == 0
    {
@@ -4023,7 +4191,7 @@ void _F_mpz_poly_mul(F_mpz_poly_t output, F_mpz_poly_t input1, F_mpz_poly_t inpu
    _F_mpz_poly_mul_KS(output, input1, input2, bits);     
 }
 
-void F_mpz_poly_mul(F_mpz_poly_t res, F_mpz_poly_t poly1, F_mpz_poly_t poly2)
+void F_mpz_poly_mul(F_mpz_poly_t res, const F_mpz_poly_t poly1, const F_mpz_poly_t poly2)
 {
 	if ((poly1->length == 0) || (poly2->length == 0)) // special case if either poly is zero
    {
@@ -4047,7 +4215,7 @@ void F_mpz_poly_mul(F_mpz_poly_t res, F_mpz_poly_t poly1, F_mpz_poly_t poly2)
 	}		
 }
 
-void _F_mpz_poly_mul_trunc_left(F_mpz_poly_t output, F_mpz_poly_t input1, F_mpz_poly_t input2, ulong trunc)
+void _F_mpz_poly_mul_trunc_left(F_mpz_poly_t output, const F_mpz_poly_t input1, const F_mpz_poly_t input2, ulong trunc)
 {
    if ((input1->length == 0) || (input2->length == 0) || (input1->length + input2->length <= trunc + 1)) // special case, length == 0
    {
@@ -4107,7 +4275,7 @@ void _F_mpz_poly_mul_trunc_left(F_mpz_poly_t output, F_mpz_poly_t input1, F_mpz_
    _F_mpz_poly_mul_KS(output, input1, input2, bits);     
 }
 
-void F_mpz_poly_mul_trunc_left(F_mpz_poly_t res, F_mpz_poly_t poly1, F_mpz_poly_t poly2, ulong trunc)
+void F_mpz_poly_mul_trunc_left(F_mpz_poly_t res, const F_mpz_poly_t poly1, const F_mpz_poly_t poly2, ulong trunc)
 {
    if ((poly1->length == 0) || (poly2->length == 0) || (poly1->length + poly2->length <= trunc + 1)) // special case if either poly is zero
    {
@@ -4245,7 +4413,6 @@ void F_mpz_poly_div_divconquer_recursive(F_mpz_poly_t Q, F_mpz_poly_t BQ, const 
    // A->length is now >= B->length
    
    ulong crossover = 16;
-   ulong crossover2 = 128;
    
    if (A->length - B->length + 1 <= crossover) 
    {
@@ -5352,3 +5519,1680 @@ void F_mpz_poly_pseudo_divrem_basecase(F_mpz_poly_t Q, F_mpz_poly_t R,
   
    F_mpz_clear(rem);
 }
+
+/*===============================================================================
+
+   New Naive Standard Functions (without test code and written by Andy)
+
+================================================================================*/
+
+void F_mpz_poly_scalar_div_exact(F_mpz_poly_t res, F_mpz_poly_t f, F_mpz_t d)
+{
+
+//check for d=+/-1?
+   if (F_mpz_is_zero(d)){
+      printf("FLINT Exception: Division by zero\n");
+      abort();
+   }
+
+   if (F_mpz_is_one(d)){
+      F_mpz_poly_set(res, f);
+      return;
+   }
+
+   if (F_mpz_is_m1(d)){
+      F_mpz_poly_neg(res, f);
+      return;
+   }
+
+   F_mpz_poly_fit_length(res, f->length);
+
+   res->length = f->length;
+
+   for (long i = 0; i < f->length; i++){
+      F_mpz_divexact(res->coeffs + i, f->coeffs + i, d);
+   }
+}
+
+void F_mpz_poly_smod(F_mpz_poly_t res, F_mpz_poly_t f, F_mpz_t p)
+{
+
+   if (F_mpz_is_zero(p)){
+      printf("FLINT Exception: Division by zero\n");
+      abort();
+   }
+
+   if (F_mpz_is_one(p)){
+      F_mpz_poly_zero(res);
+      return;
+   }
+
+   F_mpz_t pdiv2;
+   F_mpz_init(pdiv2);
+
+   F_mpz_div_2exp(pdiv2, p, 1);
+
+   F_mpz_poly_fit_length(res, f->length);
+
+   res->length = f->length;
+
+   for (long i = 0; i < f->length; i++){
+      F_mpz_mod(f->coeffs + i, f->coeffs + i, p);
+
+      if ( F_mpz_cmp( f->coeffs + i, pdiv2) > 0){
+         F_mpz_sub(res->coeffs+i, f->coeffs + i, p);
+      }
+      else{
+         F_mpz_set(res->coeffs + i, f->coeffs + i);
+      }
+
+   }
+
+   _F_mpz_poly_normalise(res);
+
+   F_mpz_clear(pdiv2);
+
+}
+
+void F_mpz_poly_derivative(F_mpz_poly_t der, F_mpz_poly_t poly)
+{
+	if (poly->length <= 1)
+	{
+		F_mpz_poly_zero(der);
+		return;
+	}
+	
+
+   F_mpz_poly_fit_length(der, poly->length - 1);
+
+	der->length = poly->length - 1;
+
+   for (ulong i = 0; i < poly->length - 1; i++)
+	{
+		F_mpz_mul_ui(der->coeffs + i, poly->coeffs + i + 1, i + 1);
+	}
+
+}
+
+void F_mpz_poly_content(F_mpz_t c, const F_mpz_poly_t poly)
+{
+   unsigned long length = poly->length;
+
+   if (length == 0) 
+   {
+      F_mpz_set_ui(c, 0L);
+      return;
+   }
+   
+   if (length == 1)
+   {
+      F_mpz_set(c, poly->coeffs);
+//      if ((long) c[0] < 0L) c[0] = -c[0];
+      return;
+   }
+   
+   F_mpz_t coeff;
+   F_mpz_init(coeff);
+
+   F_mpz_set(coeff, poly->coeffs + length - 1);
+   F_mpz_set(c, coeff);
+   
+   for (long i = length - 2; (i >= 0L) && !F_mpz_is_one(c); i--)
+   {
+      F_mpz_set(coeff, poly->coeffs + i);
+      if (!F_mpz_is_zero(coeff))
+         F_mpz_gcd(c, c, coeff);
+   }
+
+//   if (F_mpz_sgn(poly->coeffs + length -1) == -1)
+//      F_mpz_neg(c, c);
+
+   F_mpz_clear(coeff);
+
+}
+
+double F_mpz_poly_eval_horner_d(F_mpz_poly_t poly, double val){
+
+   ulong n = poly->length;
+
+   long exp;
+   double temp;
+
+   temp = F_mpz_get_d_2exp(&exp, poly->coeffs + n - 1);
+   temp = temp*pow(2, exp);
+
+   double ans = temp;
+
+   for (long i = n - 2; i >= 0L; i--)
+   {
+      ans = ans * val;
+
+      temp = F_mpz_get_d_2exp(&exp, poly->coeffs + i);
+      temp = temp*pow(2, exp);
+
+      ans = ans + temp;
+   }
+   return ans;
+}
+
+double F_mpz_poly_eval_horner_d_2exp(long * exp, F_mpz_poly_t poly, double val){
+
+   ulong vbits = round( abs( log(val) / log(2.0) ) );
+   long size_p = F_mpz_poly_max_bits(poly);
+   ulong n = poly->length;
+   ulong prec=(vbits*n) + FLINT_ABS(size_p) + 1;  
+   mpf_set_default_prec(prec);
+
+   mpz_t z_coeff_p;
+   mpf_t f_coeff_p;
+   mpf_t fval, output;
+
+   mpf_init(output); 
+   mpz_init(z_coeff_p);
+
+   F_mpz_t coeff_p;
+   F_mpz_init(coeff_p);
+   F_mpz_set(coeff_p, poly->coeffs + n - 1);
+   F_mpz_get_mpz(z_coeff_p,coeff_p);
+   mpf_set_z(output,z_coeff_p); //Set output to top coeff
+
+   mpz_clear(z_coeff_p);
+
+   mpf_init(fval);
+
+   mpf_set_d(fval,val);//set fval to mpf from the double val
+
+   for (long i = n - 2; i >= 0L; i--)
+   {
+
+      mpf_mul(output,output,fval);
+
+      F_mpz_set(coeff_p, poly->coeffs + i);
+
+      mpz_init(z_coeff_p);
+      mpf_init(f_coeff_p);
+
+      F_mpz_get_mpz(z_coeff_p,coeff_p);//convert coeff from fmpz to mpz to mpf
+      mpf_set_z(f_coeff_p,z_coeff_p);
+
+      mpf_add(output,output,f_coeff_p);//add coeff to output then repeat
+
+      mpf_clear(f_coeff_p);
+      mpz_clear(z_coeff_p);
+   }
+   double res = mpf_get_d_2exp( exp, output);
+
+   mpf_clear(output);
+   mpf_clear(fval);
+
+   return res;
+}
+
+void F_mpz_poly_scalar_abs(F_mpz_poly_t output, F_mpz_poly_t input){
+
+   if (input == output){
+      for( long i = 0; i < input->length; i++){
+         F_mpz_abs(output->coeffs + i, input->coeffs + i);
+      }
+   }
+   else{
+      F_mpz_poly_fit_length(output, input->length);
+      for( long i = 0; i < input->length; i++){
+         F_mpz_abs(output->coeffs + i, input->coeffs + i);
+      }
+      output-> length = input-> length;      
+   }
+   return;
+}
+
+/*===========================================================================
+
+   stupid F_mpz_poly functions which just wrap fmpz_poly functions
+
+============================================================================*/
+
+void F_mpz_poly_gcd(F_mpz_poly_t d, F_mpz_poly_t f, F_mpz_poly_t g){
+
+   mpz_poly_t mpz_d, mpz_f, mpz_g;
+   mpz_poly_init(mpz_d);
+   mpz_poly_init(mpz_f);
+   mpz_poly_init(mpz_g);
+
+   fmpz_poly_t fmpz_d, fmpz_f, fmpz_g;
+   fmpz_poly_init(fmpz_d);
+   fmpz_poly_init(fmpz_f);
+   fmpz_poly_init(fmpz_g);
+
+   F_mpz_poly_to_mpz_poly(mpz_f, f);
+   F_mpz_poly_to_mpz_poly(mpz_g, g);
+
+   mpz_poly_to_fmpz_poly(fmpz_f, mpz_f);
+   mpz_poly_to_fmpz_poly(fmpz_g, mpz_g);
+
+   fmpz_poly_gcd(fmpz_d, fmpz_f, fmpz_g);
+
+   fmpz_poly_to_mpz_poly(mpz_d, fmpz_d);
+
+   mpz_poly_to_F_mpz_poly(d, mpz_d);
+        
+   fmpz_poly_clear(fmpz_d);
+   fmpz_poly_clear(fmpz_f);
+   fmpz_poly_clear(fmpz_g);
+
+   mpz_poly_clear(mpz_d);
+   mpz_poly_clear(mpz_f);
+   mpz_poly_clear(mpz_g);
+}
+
+/*===========================================================================
+
+   New Material for FLINT, computing fast/tight bounds for CLDs
+      CLDs:= Coefficients of Logarithmic Derivatives.  f*g'/g
+
+============================================================================*/
+
+int _d_2exp_comp(double a, long ap, double b, long bp){
+//assumes that if ap != 0 (or bp != 0) then a (or b) is in [1/2,1)
+   if (ap == 0){
+      if (bp == 0){
+         if (a > 2*b)
+            return 2;
+         else if (b > 2*a)
+            return -2;
+         else if (a >= b)
+            return 1;
+         else
+            return -1;
+      }
+// now we know that a is the number but b is in 1/2,1 with power bp
+      long temp_ap = 1L + (long)log2(a);
+      if (temp_ap >= bp + 2)
+         return 2;
+      else if (bp >= temp_ap + 2)
+         return -2;
+      else{
+         double ta,tb;
+         ta = a/4;
+         tb = b*pow(2, (double)bp - 2);
+         return _d_2exp_comp(ta, 0, tb, 0);
+      }
+   }
+   else if (bp == 0){
+      if (ap == 0){
+         if (a > 2*b)
+            return 2;
+         else if (b > 2*a)
+            return -2;
+         else if (a >= b)
+            return 1;
+         else
+            return -1;
+      }
+// now we know that b is the number but a is in 1/2,1 with power ap
+      long temp_bp = 1L + (long)log2(b);
+      if (ap >= temp_bp + 2)
+         return 2;
+      else if (temp_bp >= ap + 2)
+         return -2;
+      else{
+         double ta,tb;
+         ta = a*pow(2, (double)ap - 2);
+         tb = b/4;
+         return _d_2exp_comp(ta, 0, tb, 0);
+      }
+   }
+   else{
+// now we know that both are in 1/2, 1 with powers
+      if (ap >= bp + 2)
+         return 2;
+      else if (bp >= ap + 2)
+         return -2;
+      else{
+         double ta,tb;
+         ta = a*pow(2, (double)ap - (double)bp);
+         tb = b;
+         return _d_2exp_comp(ta, 0, tb, 0);
+      }
+   }
+}
+
+void F_mpz_poly_CLD_bound(F_mpz_t res, F_mpz_poly_t f, ulong N){
+   if ((N < 0) || (N >= f->length - 1)){
+      printf("bad input\n");
+      return;
+   }
+//Coded with n = c+1 and decided that the user would rather give 0,1,2,3 instead of 1,2,3,4
+   ulong n = N + 1;
+   F_mpz_poly_t low_f, up_f;
+   F_mpz_poly_init(low_f);
+   F_mpz_poly_init(up_f);
+   F_mpz_poly_set(low_f, f);
+   F_mpz_poly_truncate(low_f, n);
+   F_mpz_poly_scalar_abs(low_f, low_f);
+
+   F_mpz_poly_right_shift(up_f, f, n);
+   F_mpz_poly_left_shift(up_f, up_f, n);
+   F_mpz_poly_scalar_abs(up_f, up_f);
+//Need to take scalar_abs of F_mpz_poly's here.
+   double rpower = 0;
+   double rshift = 1;
+   double r = pow(2,rpower);
+   double top_eval;
+   double bottom_eval;
+//OK right now we have a fast and loose double version, which suffices for the moment.  It is completely forseeable that a large polynomial input will require an F_mpz_t bound... I don't need a super precise output so I want to do the exponent trick to allow large numbers with only double bits of precision.  So need to make an F_mpz_poly_eval_horner_fast_d_2exp and some kind of an exponent size check on the flip side.  The eval program can use doubles and just track the exponents... in the meantime for small input polys this function works.
+   long top_exp;
+   long bot_exp;
+   int dir = 1;
+   double ans;
+   int good_enough = 0;
+   long size_p = F_mpz_poly_max_bits(f);
+   ulong hn;// = poly->length;
+   ulong vbits;// = round( abs( log(val) / log(2.0) ) );
+   ulong prec;// =(vbits*n) + FLINT_ABS(size_p) + 1; 
+   while (!good_enough){
+      hn = up_f->length;
+      vbits = round( abs( log(r) / log(2.0) ) );
+      prec = (vbits*hn) + FLINT_ABS(size_p) + 1;
+      //this is a rough bound for the number of bits of the answer...
+      if (prec > 1021){
+         top_eval = F_mpz_poly_eval_horner_d_2exp( &top_exp, up_f, r);
+         // maybe I'll deal with this on it's own.  top_eval = top_eval*pow(2, top_exp);
+      }      
+      else{
+         //Here we knew all along that doubles were good enough
+         top_eval = F_mpz_poly_eval_horner_d( up_f, r);
+         top_exp = 0;
+      }
+      hn = low_f->length;
+      prec = (vbits*hn) + FLINT_ABS(size_p) + 1;
+      if (prec > 1021){
+         bottom_eval = F_mpz_poly_eval_horner_d_2exp( &bot_exp, low_f, r);
+//         bottom_eval = bottom_eval*pow(2, bot_exp);
+      }      
+      else{
+         bottom_eval = F_mpz_poly_eval_horner_d(low_f, r);
+         bot_exp = 0;
+      }
+      if ((top_exp == 0) && (bot_exp == 0)){
+         if ( 2*(bottom_eval) < (top_eval) ){
+            if (dir == 1)
+               rshift = rshift/2;
+            dir = -1;
+            rpower = rpower - rshift;
+            r = pow(2, rpower);
+         }
+         else if (  (bottom_eval) > 2*(top_eval) ){
+            if (dir == -1)
+               rshift = rshift/2;
+            dir = 1;
+            rpower = rpower + rshift;
+            r = pow(2, rpower);
+         }
+         else{
+            good_enough = 1;
+
+            if (top_eval > bottom_eval)
+               ans = top_eval;
+            else
+               ans = bottom_eval;
+
+            ans = ans / pow(r, n);
+            ans = ans*(f->length - 1);
+            mpz_t temp;
+            mpz_init(temp);
+            mpz_set_d(temp, ans);
+            F_mpz_set_mpz(res, temp);
+            mpz_clear(temp);
+         }
+
+      }
+      else{
+//here is trouble land, coeffs too big for doubles to handle.
+// _d_2exp_comp should give 2 when 2*bottom < top and -2 when 2*top < bottom and 1 when bottom <= top and -1 when bottom > top
+         int test_me = _d_2exp_comp(top_eval, top_exp, bottom_eval, bot_exp);
+
+         if ( test_me == 2 ){
+            if (dir == 1)
+               rshift = rshift/2;
+            dir = -1;
+            rpower = rpower - rshift;
+            r = pow(2, rpower);
+         }
+         else if ( test_me == -2 ){
+            if (dir == -1)
+               rshift = rshift/2;
+            dir = 1;
+            rpower = rpower + rshift;
+            r = pow(2, rpower);
+         }
+         else{
+            good_enough = 1;
+            if (test_me == 1){
+// F_mpz_set_d_2exp and adjust and stuff using top_eval, top_exp 
+               ans = top_eval;
+               ans = ans / pow(r, n);
+               ans = ans * f->length - 1;
+               F_mpz_set_d_2exp(res, ans, top_exp);
+            }
+            else{
+// F_mpz_set_d_2exp and adjust and junk using bottom_eval, bot_exp
+               ans = bottom_eval;
+               ans = ans / pow(r, n);
+               ans = ans * f->length - 1;
+               F_mpz_set_d_2exp(res, ans, bot_exp);
+            }
+         }
+      }
+   }
+   F_mpz_poly_clear(low_f);
+   F_mpz_poly_clear(up_f);
+   return;
+}
+
+/*============================================================================
+
+   Naive '_modp' ( := Large moduli ) F_mpz_poly functions
+
+============================================================================*/
+
+void F_mpz_poly_rem_modp_naive(F_mpz_poly_t R, F_mpz_poly_t A, F_mpz_poly_t B, F_mpz_t p){
+
+   if (B->length == 0)
+   {
+      printf("Error: Divide by zero\n");
+      abort();      
+   }
+   
+   if (A->length < B->length)
+   {
+      F_mpz_poly_set(R, A);      
+      return;
+   }
+
+   F_mpz_poly_set(R,A);
+   long coeff = A->length - 1;
+
+   F_mpz_poly_t pre_inv_B, Bm1, qB;
+   F_mpz_poly_init2(Bm1, B->length);
+
+   F_mpz_poly_set(Bm1, B);
+
+   F_mpz_t B_lead_inv;
+   F_mpz_init(B_lead_inv);
+   F_mpz_t coeff_Q;
+   F_mpz_init( coeff_Q);
+
+   F_mpz_invert(B_lead_inv, B->coeffs + (B->length - 1), p);
+
+   long R_length;
+
+   F_mpz_t temp;
+   F_mpz_init( temp );
+
+   while (coeff >= (long) Bm1->length - 1){
+      while( (coeff >= (long) Bm1->length - 1) && F_mpz_is_zero( R->coeffs + coeff ) ){
+         coeff--;
+      }
+      if (coeff >= (long) B->length - 1){
+         F_mpz_mul2(temp, R->coeffs + coeff, B_lead_inv);
+         F_mpz_mod(coeff_Q, temp, p);
+
+         F_mpz_poly_init(qB);
+         F_mpz_poly_fit_length(qB, Bm1->length);
+
+         qB->length = Bm1->length;
+         for (long i = 0; i < Bm1->length; i++){
+            F_mpz_mul2(temp, Bm1->coeffs + i , coeff_Q );
+            F_mpz_mod(qB->coeffs + i, temp, p);
+         }
+//for each coeff do mulmod by coeff_Q and write to temp_B
+         F_mpz_poly_left_shift(qB, qB, coeff - B->length + 1);
+
+         R_length = coeff;
+         F_mpz_poly_sub(R, R, qB);
+         R->length = R_length;
+
+         F_mpz_poly_clear(qB);
+
+         for (long i = 0; i < R->length; i++){
+            F_mpz_mod(R->coeffs + i, R->coeffs + i, p);
+         }
+         //subtract a shifted temp_B from R
+         coeff--;
+      }
+   }
+   R->length = B->length - 1;
+   _F_mpz_poly_normalise(R);
+
+   F_mpz_clear(B_lead_inv);
+
+   F_mpz_poly_clear(Bm1);
+   F_mpz_clear(coeff_Q);
+   F_mpz_clear(temp);
+}
+
+void F_mpz_poly_mulmod_modp_naive(F_mpz_poly_t R, F_mpz_poly_t f, F_mpz_poly_t g, F_mpz_poly_t B, F_mpz_t p){
+//Want to compute f*g mod B where all polynomials are considered modulo an F_mpz modulus p.  Need that the leading coeff of B is invertible mod p.
+   if (B->length == 0){
+      printf("FLINT Exception: Divide by zero\n");
+      abort();
+   }
+   if ( (B->length ==1) || (f->length == 0) || (g->length == 0) ){
+      F_mpz_poly_zero(R);
+      return;
+   }
+   F_mpz_poly_t prod;
+   F_mpz_poly_init(prod);
+   F_mpz_poly_mul(prod, f, g);
+   F_mpz_poly_rem_modp_naive(R, prod, B, p);
+   F_mpz_poly_clear(prod);
+}
+
+void F_mpz_poly_div_trunc_modp( F_mpz_t *res, F_mpz_poly_t f, F_mpz_poly_t g, F_mpz_t P, ulong n){
+//assuming that g divides f mod P find the bottom n coeffs of f/g mod P.  (truncate now or no?) 
+   if (g->length > f->length){
+      if (n < f->length){
+         for(ulong i = 0; i < n; i++)
+            F_mpz_smod(res[i], f->coeffs + i, P);
+         return;
+      }
+      else{
+         for(ulong i = 0; i < f->length; i++)
+            F_mpz_smod(res[i], f->coeffs + i, P);
+         return;
+      }
+   }
+   F_mpz_t temp, tc_inv;
+   F_mpz_init(temp);
+   F_mpz_init(tc_inv);
+
+   F_mpz_poly_t t_f, t_g;
+   F_mpz_poly_init(t_f);
+   F_mpz_poly_init(t_g);
+
+   F_mpz_poly_set(t_f, f);
+   F_mpz_poly_set(t_g, g);
+   F_mpz_poly_truncate(t_f, n);
+   F_mpz_poly_truncate(t_g, n);
+//now we have t_f, t_g truncated to the bottom n terms for speed reasons.
+   F_mpz_set(temp, t_g->coeffs);
+   F_mpz_invert(tc_inv, temp, P);
+
+   if (F_mpz_is_zero(tc_inv)){
+//Potential math problem here so we'll just get the answers the old fashioned way, hope this is rare, I should talk to somebody...
+      F_mpz_poly_div(t_f, f, g);
+      F_mpz_poly_smod(t_f, t_f, P);      
+
+      if (n < t_f->length)
+         for(ulong i = 0; i < n; i++){
+            F_mpz_set(res[i], t_f->coeffs + i);
+         }
+      else
+         for(ulong i = 0; i < t_f->length; i++){
+            F_mpz_set(res[i], t_f->coeffs + i);
+         }
+      F_mpz_poly_clear(t_f);
+      F_mpz_poly_clear(t_g);
+   
+      F_mpz_clear(tc_inv);
+      F_mpz_clear(temp);
+      return;
+   }
+   F_mpz_poly_t tempg;
+   F_mpz_poly_init(tempg);
+
+   ulong quo_length = n;
+
+   if (n > f->length)
+      quo_length = f->length - g->length + 1;
+
+   for(ulong i = 0; (i < n) && (i < quo_length) ; i++){
+//  This is a number which would cancel out the lowest term of f mod P
+      F_mpz_mul2(temp, t_f->coeffs, tc_inv);
+      F_mpz_smod(res[i], temp, P);
+
+      F_mpz_poly_right_shift(tempg, t_g, 1UL);
+      F_mpz_poly_right_shift(t_f, t_f, 1UL);
+
+      F_mpz_poly_scalar_mul(tempg, tempg, temp);
+      F_mpz_poly_sub(t_f, t_f, tempg);
+
+      F_mpz_poly_smod(t_f, t_f, P);
+
+      F_mpz_poly_truncate(t_f, n - i -1);
+   }
+   F_mpz_poly_clear(tempg);
+   F_mpz_poly_clear(t_f);
+   F_mpz_poly_clear(t_g);
+
+   F_mpz_clear(tc_inv);
+   F_mpz_clear(temp);
+   return;
+}
+
+void F_mpz_poly_div_upper_trunc_modp( F_mpz_t *res, F_mpz_poly_t f, F_mpz_poly_t g, F_mpz_t P, ulong n){
+//assuming that g divides f mod P find the top n coeffs of f/g mod P using only the top n coeffs of f and g.
+   if (g->length > f->length){
+      if (n < f->length){
+         for(ulong i = 0; i < n; i++)
+            F_mpz_smod(res[i], f->coeffs + i, P);
+         return;
+      }
+      else{
+         for(ulong i = 0; i < f->length; i++)
+            F_mpz_smod(res[i], f->coeffs + i, P);
+         return;
+      }
+   }
+   F_mpz_t temp, lc_inv;
+   F_mpz_init(temp);
+   F_mpz_init(lc_inv);
+
+   F_mpz_poly_t t_f, t_g;
+   F_mpz_poly_init(t_f);
+   F_mpz_poly_init(t_g);
+
+   F_mpz_poly_set(t_f, f);
+   F_mpz_poly_set(t_g, g);
+   if (n < t_f->length){
+      F_mpz_poly_right_shift(t_f, t_f, t_f->length - n);
+   }
+   if (n < t_g->length){
+      F_mpz_poly_right_shift(t_g, t_g, t_g->length - n);
+   }
+//now we have t_f, t_g truncated to the bottom n terms.
+   F_mpz_set(temp, t_g->coeffs + t_g->length - 1);
+   F_mpz_invert(lc_inv, temp, P);
+
+   if (F_mpz_is_zero(lc_inv)){
+//Potential math problem here so we'll just get the answers the old fashioned way, hope this is rare, I should talk to somebody...
+      F_mpz_poly_div(t_f, f, g);
+      F_mpz_poly_smod(t_f, t_f, P);      
+
+      if (n < t_f->length)
+         for(ulong i = 0; i < n; i++){
+            F_mpz_set(res[i], t_f->coeffs + t_f->length - 1 - i);
+         }
+      else
+         for(ulong i = 0; i < t_f->length; i++){
+            F_mpz_set(res[i], t_f->coeffs + t_f->length -1 - i);
+         }
+      F_mpz_poly_clear(t_f);
+      F_mpz_poly_clear(t_g);   
+      F_mpz_clear(lc_inv);
+      F_mpz_clear(temp);
+      return;
+   }
+   F_mpz_poly_t tempg;
+   F_mpz_poly_init(tempg);
+
+   ulong quo_length = n;
+   if (n > f->length)
+      quo_length = f->length - g->length + 1;
+   for(ulong i = 0; (i < n) && (i < quo_length); i++){
+      F_mpz_mul2(temp, t_f->coeffs + t_f->length - 1, lc_inv);
+      F_mpz_smod(res[i], temp, P);
+
+      long fg_diff;
+      fg_diff = t_f->length - t_g->length;
+
+      if (fg_diff>=0)
+         F_mpz_poly_left_shift(tempg, t_g, fg_diff);
+      else
+         F_mpz_poly_right_shift(tempg, t_g, -fg_diff);
+
+      F_mpz_poly_truncate(t_f, t_f->length - 1);
+      F_mpz_poly_truncate(tempg, tempg->length - 1);
+      F_mpz_poly_scalar_mul(tempg, tempg, res[i]);
+      F_mpz_poly_sub(t_f, t_f, tempg);
+      F_mpz_poly_smod(t_f, t_f, P);
+   }
+   F_mpz_poly_clear(tempg);
+   F_mpz_poly_clear(t_f);
+   F_mpz_poly_clear(t_g);
+
+   F_mpz_clear(lc_inv);
+   F_mpz_clear(temp);
+   return;
+}
+
+/*============================================================================
+
+   Square-Free Factorization
+
+============================================================================*/
+
+void F_mpz_poly_squarefree(F_mpz_poly_factor_t fac, F_mpz_t content, F_mpz_poly_t F)
+{
+
+   F_mpz_poly_content(content, F);
+
+   F_mpz_poly_t f;
+   F_mpz_poly_init(f);
+
+   F_mpz_poly_scalar_div_exact(f, F, content);
+
+   F_mpz_poly_factor_clear(fac);
+   F_mpz_poly_factor_init(fac);
+
+   if (f->length == 1)
+      return;
+
+   F_mpz_poly_t d, v, w, s, t1;
+   F_mpz_poly_init(d);
+   F_mpz_poly_init(v);
+   F_mpz_poly_init(w);
+   F_mpz_poly_init(s);
+   F_mpz_poly_init(t1);
+
+   F_mpz_poly_derivative(t1, f);
+   F_mpz_poly_gcd(d, f, t1);
+
+   if (d->length == 1){
+      F_mpz_poly_factor_insert(fac, f, 1);
+
+      F_mpz_poly_clear(d);
+      F_mpz_poly_clear(v);
+      F_mpz_poly_clear(w);
+      F_mpz_poly_clear(s);
+      F_mpz_poly_clear(t1);
+      F_mpz_poly_clear(f);
+      return;
+   }
+
+   F_mpz_poly_div(v, f, d);
+   F_mpz_poly_div(w, t1, d);
+   long i = 0;
+
+   for ( ; ;){
+
+      i = i + 1;
+      F_mpz_poly_derivative(t1, v);
+      F_mpz_poly_sub(s, w, t1);
+      if (s->length == 0){
+         if (v->length > 1)
+            F_mpz_poly_factor_insert(fac, v, i);
+         F_mpz_poly_clear(d);
+         F_mpz_poly_clear(v);
+         F_mpz_poly_clear(w);
+         F_mpz_poly_clear(s);
+         F_mpz_poly_clear(t1);
+         F_mpz_poly_clear(f);
+         return;
+      }
+      F_mpz_poly_gcd(d, v, s);
+      F_mpz_poly_div(v, v, d);
+      F_mpz_poly_div(w, s, d);
+
+      if (d->length > 1)
+         F_mpz_poly_factor_insert(fac, d, i);
+   } 
+   F_mpz_poly_clear(f);
+   F_mpz_poly_clear(d);
+   F_mpz_poly_clear(v);
+   F_mpz_poly_clear(w);
+   F_mpz_poly_clear(s);
+   F_mpz_poly_clear(t1);
+   return;
+}
+
+/*****************************************************************************
+
+   NTL Hensel Lifting procedures
+
+*****************************************************************************/
+
+void _Build_Hensel_Tree(long *link, F_mpz_poly_t *v, F_mpz_poly_t *w, zmod_poly_factor_t fac){
+
+   long r;
+   unsigned long p;
+
+   r = fac->num_factors;
+   p = (fac->factors[0])->p;
+
+   long i, j, s;
+   long minp, mind;
+   long tmp;
+
+   zmod_poly_t V[2*r-2];
+   zmod_poly_t W[2*r-2];
+
+   for (i = 0; i < 2*r-2; i++)
+      zmod_poly_init(V[i],p);
+
+   for (i = 0; i < 2*r-2; i++)
+      zmod_poly_init(W[i],p);
+
+/* We will have five arrays: a v of fmpz_polys and a V of zmod_polys also a w and a W and link.  Here's the idea, we will sort each leaf and node of a factor tree by degree, in fact choosing to multiply the two smallest factors, then the next two smallest (factors or products) until a tree is made.  The tree will be stored in the v's.  The first two elements of v will be the smallest modular factors, the last two elements of v will multiply to form F itself.  Since v will be rearranging the original factors we will need to be able to recover the original order.  For this we use link which has nonnegative even numbers and negative numbers.  Link is an array of longs which aligns with V/v  if link has a negative number in spot j that means V[j] is an original modular factor which has been lifted, if link[j] is a nonnegative even number then V[j] stores a product of the two entries at V[ link[j] ] and V[ link[j]+1 ].  W/w plays the role of the extended GCD, at V[0], V[2], V[4], etc we have a new product, W[0], W[2], W[4], etc are the XGCD compliments of the V's.  So V[0]*W[0]+V[1]*W[1] = 1 mod p^(something)  these will be lifted along with the entries in V.  It's not enough to just lift each factor we have to lift the entire tree and the tree of XGCD inverses.*/
+
+   for (i = 0; i < r; i++){
+      zmod_poly_set(V[i], fac->factors[i]);
+      link[i] = -(i+1);
+   }
+
+   for (j = 0; j < 2*r - 4; j += 2){
+      minp = j;
+      mind = zmod_poly_degree(V[j]);
+      for (s = j+1; s < i; s++){
+         if (zmod_poly_degree(V[s]) < mind){
+            minp = s;
+            mind = zmod_poly_degree(V[s]);
+         }
+      }
+      zmod_poly_swap(V[j],V[minp]);
+
+      tmp = link[j];
+      link[j] = link[minp];
+      link[minp] = tmp; 
+      //swap link[j] and V[minp]
+
+      minp = j+1;
+      mind = zmod_poly_degree(V[j+1]);
+
+      for ( s = j+2; s < i; s++){
+         if (zmod_poly_degree(V[s]) < mind ){
+            minp = s;
+            mind = zmod_poly_degree(V[s]);
+         }
+      }
+
+      zmod_poly_swap(V[j+1],V[minp]);
+
+      tmp = link[j+1];
+      link[j+1] = link[minp];
+      link[minp] = tmp; 
+      //swap link[j+1] and V[minp]
+
+      zmod_poly_mul(V[i], V[j], V[j+1]);
+      link[i] = j;
+      i++;
+   }
+   zmod_poly_t d;
+   zmod_poly_init(d, p);
+   for (j = 0; j < 2*r - 2; j += 2){
+      zmod_poly_xgcd_euclidean(d, W[j], W[j+1], V[j], V[j+1]);
+      //Make a check for d!=1
+   }
+   for (j = 0; j < 2*r-2; j++){
+      zmod_poly_to_F_mpz_poly(v[j], V[j]);
+      zmod_poly_to_F_mpz_poly(w[j], W[j]);
+   }
+   for (i = 0; i < 2*r-2; i++)
+      zmod_poly_clear(V[i]);
+   for (i = 0; i < 2*r-2; i++)
+      zmod_poly_clear(W[i]);
+   zmod_poly_clear(d);
+}
+
+void _Hensel_Lift(F_mpz_poly_t Gout, F_mpz_poly_t Hout, F_mpz_poly_t Aout, F_mpz_poly_t Bout, F_mpz_poly_t f, F_mpz_poly_t g, F_mpz_poly_t h, F_mpz_poly_t a, F_mpz_poly_t b, F_mpz_t p, F_mpz_t p1){
+
+   F_mpz_poly_t c, g1, h1, G, H, A, B;
+   F_mpz_poly_init(c);
+   F_mpz_poly_init(g1);
+   F_mpz_poly_init(h1);
+   F_mpz_poly_init(G);
+   F_mpz_poly_init(H);
+   F_mpz_poly_init(A);
+   F_mpz_poly_init(B);
+
+   F_mpz_poly_mul(c, g, h);
+
+   F_mpz_poly_sub(c, f, c);
+
+   F_mpz_poly_scalar_div_exact(c, c, p);
+   //Make a check that c is divisible by p
+
+//When I make a precomputing function use GG, HH instead
+
+   F_mpz_poly_t R;
+   F_mpz_poly_init(R);
+
+   F_mpz_poly_rem_modp_naive(R, c, h, p1);
+   F_mpz_poly_mulmod_modp_naive(h1, R, a, h, p1);
+   F_mpz_poly_rem_modp_naive(R, c, g, p1);
+   F_mpz_poly_mulmod_modp_naive(g1, R, b, g, p1);
+//   F_mpz_poly_smod(g1, g1, p1);
+//   F_mpz_poly_smod(h1, h1, p1);
+
+   F_mpz_poly_scalar_mul(g1, g1, p);
+   F_mpz_poly_scalar_mul(h1, h1, p);
+
+   F_mpz_poly_add(G, g, g1);
+   F_mpz_poly_add(H, h, h1);
+   
+//Lifting the inverses now
+
+   F_mpz_poly_t a1, b1, t1, t2, unity;
+   F_mpz_poly_init(a1);
+   F_mpz_poly_init(b1);
+   F_mpz_poly_init(t1);
+   F_mpz_poly_init(t2);
+   F_mpz_poly_init(unity);
+
+   F_mpz_poly_set_coeff_si(unity, 0, -1);
+
+   F_mpz_poly_mul(t1, a, G);
+   F_mpz_poly_mul(t2, b, H);
+
+   F_mpz_poly_add(t1, t1, t2);
+   F_mpz_poly_add(t1, t1, unity);
+   F_mpz_poly_neg(t1, t1);
+
+   F_mpz_poly_scalar_div_exact(t1, t1, p);
+//Make a check that t1 is divisible by p
+
+   F_mpz_poly_rem_modp_naive(R, t1, h, p1);
+   F_mpz_poly_mulmod_modp_naive(a1, R, a, h, p1);
+   F_mpz_poly_rem_modp_naive(R, t1, g, p1);
+   F_mpz_poly_mulmod_modp_naive(b1, R, b, g, p1);
+   F_mpz_poly_clear(R);
+//   F_mpz_poly_smod(b1, b1, p1);
+//   F_mpz_poly_smod(a1, a1, p1);
+
+   F_mpz_poly_scalar_mul(a1, a1, p);
+   F_mpz_poly_add(A, a, a1);
+
+   F_mpz_poly_scalar_mul(b1, b1, p);
+   F_mpz_poly_add(B, b, b1);
+
+   F_mpz_poly_set(Gout, G);
+   F_mpz_poly_set(Hout, H);
+   F_mpz_poly_set(Aout, A);
+   F_mpz_poly_set(Bout, B);
+
+   F_mpz_poly_clear(a1);
+   F_mpz_poly_clear(b1);
+   F_mpz_poly_clear(t1);
+   F_mpz_poly_clear(t2);
+   F_mpz_poly_clear(unity);
+
+   F_mpz_poly_clear(c);
+   F_mpz_poly_clear(g1);
+   F_mpz_poly_clear(h1);
+   F_mpz_poly_clear(G);
+   F_mpz_poly_clear(H);
+   F_mpz_poly_clear(A);
+   F_mpz_poly_clear(B);
+}
+
+void _Rec_Tree_Hensel_Lift(long *link, F_mpz_poly_t *v, F_mpz_poly_t *w, F_mpz_t p, F_mpz_poly_t f, long j, long inv, F_mpz_t p1){
+
+   if (j < 0) return;
+
+   if (inv)
+      _Hensel_Lift(v[j], v[j+1], w[j], w[j+1], f, v[j], v[j+1], w[j], w[j+1], p, p1);
+//   else
+//      _Hensel_Lift1(v[j], v[j+1], f, v[j], v[j+1], w[j], w[j+1], p, p1);
+//altered to check a bug, should be Hensel_Lift1
+   _Rec_Tree_Hensel_Lift(link, v, w, p, v[j],   link[j],   inv, p1);
+   _Rec_Tree_Hensel_Lift(link, v, w, p, v[j+1], link[j+1], inv, p1);
+}
+
+void _Tree_Hensel_Lift(long *link, F_mpz_poly_t *v, F_mpz_poly_t *w, long e0, long e1, F_mpz_poly_t f, long inv, long p, long r, F_mpz_t P){
+
+   F_mpz_t temp, p0, p1;
+   F_mpz_init(p0);
+   F_mpz_init(p1);
+   F_mpz_init(temp);
+
+   F_mpz_set_ui(temp, p);
+
+   F_mpz_pow_ui(p0, temp, e0);
+   F_mpz_pow_ui(p1, temp, e1 - e0);
+
+   _Rec_Tree_Hensel_Lift(link, v, w, p0, f, 2*r-4, inv, p1);
+
+   F_mpz_mul2(P, p0, p1);
+
+   F_mpz_clear(temp);
+   F_mpz_clear(p0);
+   F_mpz_clear(p1);
+
+}
+
+/***************************************************
+
+Naive Zassenhaus
+
+***************************/
+
+void F_mpz_poly_zassenhaus_naive(F_mpz_poly_factor_t final_fac, F_mpz_poly_factor_t lifted_fac, F_mpz_poly_t F, F_mpz_t P, ulong exp, F_mpz_t lc){
+
+   ulong r = lifted_fac->num_factors;
+   F_mpz_poly_t f;
+   F_mpz_poly_init(f);
+
+   F_mpz_poly_set(f, F);
+
+   F_mpz_poly_t Q,R;
+   F_mpz_poly_init(Q);
+   F_mpz_poly_init(R);
+   F_mpz_poly_t tryme;
+   F_mpz_poly_init(tryme);
+   F_mpz_t temp_lc;
+
+   int k;
+   int l;
+   int indx;
+   int used_arr[r];
+   for(l = 0; l < r; l++){
+      used_arr[l] = 0;
+   }
+
+   for (k = 1; k < r; k++){
+      ulong count = 0;
+      ulong sub_arr[k];
+      for(l = 0; l < k; l++){
+         sub_arr[l] = l;
+      }
+      indx = k-1;
+      sub_arr[indx]--;
+      while ((indx >= 0)){
+         sub_arr[indx] = sub_arr[indx] + 1;
+         for (l = indx + 1; l < k; l++){
+            sub_arr[l] = sub_arr[l-1] + 1UL;
+         }
+         if (sub_arr[k-1] > r-1UL ){
+            indx--;
+         }
+         else{
+            for(l = 0; l < k; l++){
+               if (used_arr[sub_arr[l]] == 1)
+                  break;
+            }
+//Need to involve lc, perhaps set coeff 0 to lc and do lc * rest and check if under M_bits... here I'm using a trial division... hmm
+            F_mpz_poly_fit_length(tryme, 1UL);
+            tryme->length = 1UL;
+            F_mpz_set(tryme->coeffs + 0, lc);
+            for(l = 0; l < k; l++){
+               F_mpz_poly_mul(tryme, tryme, lifted_fac->factors[sub_arr[l]]);
+            }
+            F_mpz_poly_smod(tryme, tryme, P);
+            F_mpz_init(temp_lc);
+            F_mpz_poly_content(temp_lc, tryme);
+            F_mpz_poly_scalar_div_exact(tryme, tryme, temp_lc);
+            F_mpz_poly_divrem(Q, R, f, tryme);
+            if (R->length == 0){
+//        FOUND ONE!!!!!
+               F_mpz_poly_factor_insert(final_fac, tryme, exp);
+               for(l = 0; l < k; l++){
+                  used_arr[sub_arr[l]] = 1;
+                  count++;
+               }
+               F_mpz_poly_set(f, Q);
+               F_mpz_set(lc, Q->coeffs + Q->length - 1 );
+//If r-count = k then the rest are irreducible.  But haven't added that
+            }
+            F_mpz_clear(temp_lc);
+            indx = k-1;
+         }
+      }
+//This is where we switch to the next loop for k.
+//So we will have found all factors using <= k local factors
+//We should/could update f to be the rest divided away (or multiply the remaining)
+// could also adjust r.  It is the number of remaining factors  
+//so if you update then test if r = k or k+1 in which case the remaining f is irreducible.
+   }
+   ulong test = 0;
+   for (l = 0; l < r; l++){
+      test = test + used_arr[l];
+   }
+   if (test == 0)
+      F_mpz_poly_factor_insert(final_fac, f, exp);
+   F_mpz_poly_clear(f);
+   F_mpz_poly_clear(tryme);
+   F_mpz_poly_clear(Q);
+   F_mpz_poly_clear(R);
+   return;
+}
+
+/*********
+
+   Factoring wrapper after square free part
+
+*********/
+
+void F_mpz_poly_factor_sq_fr_prim( F_mpz_poly_factor_t final_fac, ulong exp, F_mpz_poly_t f ){
+
+   if (f->length <= 1){
+      return;
+   }
+   if (f->length == 2){
+      F_mpz_poly_factor_insert( final_fac, f, exp);
+      return;
+   }
+   ulong len = f->length;
+   F_mpz_t lc;
+   F_mpz_init(lc);   
+   F_mpz_set(lc, f->coeffs + len - 1);
+   ulong M_bits = 0;
+   M_bits = M_bits + F_mpz_bits(lc) + FLINT_ABS(F_mpz_poly_max_bits(f)) + len + (long)ceil(log2((double) len));
+   zmod_poly_t F, F_d, F_sbo;
+   int tryme = 1;
+   ulong p = 2UL;
+   long i;
+   for (i = 0; (i < 200) && (tryme == 1); i++){
+      zmod_poly_init(F, p);
+      zmod_poly_init(F_d, p);
+      zmod_poly_init(F_sbo, p);
+      F_mpz_poly_to_zmod_poly(F, f);
+      if (F->length < f->length){
+         p = z_nextprime( p, 0);
+         zmod_poly_clear(F_d);
+         zmod_poly_clear(F_sbo);
+         zmod_poly_clear(F);
+         continue;
+      }
+//Maybe faster some other way... checking if squarefee mod p
+      zmod_poly_derivative(F_d, F);      
+      zmod_poly_gcd(F_sbo, F, F_d);
+      if (zmod_poly_is_one(F_sbo)){
+         tryme = 0;
+      }
+      else{
+         p = z_nextprime( p, 0);
+         zmod_poly_clear(F);
+      }
+      zmod_poly_clear(F_d);
+      zmod_poly_clear(F_sbo);
+   }
+   if (i == 200){
+      printf("wasn't square_free after 200 primes, maybe an error\n");
+      zmod_poly_clear(F);
+      F_mpz_clear(lc);
+      return;
+   }
+
+   zmod_poly_factor_t fac;
+   zmod_poly_factor_init(fac);
+
+   unsigned long lead_coeff;
+   lead_coeff = zmod_poly_factor(fac, F);
+
+   long r;
+   r = fac->num_factors;
+
+   int use_Hoeij_Novocin = 0;
+   int solved_yet = 0;
+   int mexpo[r + 2 * (f->length - 1)];
+   F_mpz_mat_t M;
+
+   if (r > 180){
+      printf("Too high for us right now... maybe later\n");
+      abort();
+   }
+
+//In the near future we should go back and try some more primes might deduce irreducibility or find smaller r
+   if (r > 10){
+      use_Hoeij_Novocin = 1;
+      F_mpz_mat_init_identity(M, r);
+      for (ulong i = 0; i < M->c; i++)
+         mexpo[i] = 0;
+   }
+   if (r == 0){
+      printf("FLINT-exception: something broke\n");
+      zmod_poly_clear(F);
+      zmod_poly_factor_clear(fac);
+      F_mpz_clear(lc);
+      abort();
+   }
+   if (r == 1){
+      F_mpz_poly_factor_insert(final_fac, f, exp);
+      zmod_poly_clear(F);
+      zmod_poly_factor_clear(fac);
+      F_mpz_clear(lc);
+      return;
+   }
+
+//Begin Hensel Lifting phase, make the tree in v, w, and link
+// Later we'll do a check if use_Hoeij_Novocin (try for smaller a)
+   ulong a;
+   a = (long) ceil( (double) M_bits / log2( (double)p ) );
+   a = (long) pow( (double) 2, ceil( log2( (double) a ) ) );
+
+   F_mpz_poly_t v[2*r-2];
+   F_mpz_poly_t w[2*r-2];   
+   long link[2*r-2];
+//P will be the F_mpz modulus
+   F_mpz_poly_factor_t lifted_fac;
+   F_mpz_poly_factor_init(lifted_fac);
+//If r>5 then we'll need to allocate enough room for r factors
+   if (r > lifted_fac->alloc)
+   {
+      lifted_fac->factors = (F_mpz_poly_t *) flint_heap_realloc_bytes(lifted_fac->factors, sizeof(F_mpz_poly_t)*r);
+      lifted_fac->exponents = (unsigned long *) flint_heap_realloc(lifted_fac->exponents, r);
+      for (unsigned long i = lifted_fac->alloc; i < r; i++)
+         F_mpz_poly_init(lifted_fac->factors[i]);
+      lifted_fac->alloc = r;
+   }
+
+   F_mpz_t P, big_P, Pt;
+   F_mpz_poly_t f1;
+   F_mpz_t lc_inv;
+   F_mpz_init(P);
+   F_mpz_set_ui(P, p);
+
+   for (i = 0; i < 2*r-2; i++)
+      F_mpz_poly_init(v[i]);
+
+   for (i = 0; i < 2*r-2; i++)
+      F_mpz_poly_init(w[i]);
+
+   _Build_Hensel_Tree(link, v, w, fac);
+//clearing fac early, don't need them anymore
+   zmod_poly_factor_clear(fac);
+
+   ulong e = 1;
+
+   while( solved_yet == 0 ){
+      F_mpz_init(Pt);
+      F_mpz_init(big_P);
+      F_mpz_set_ui(Pt, p);
+      F_mpz_pow_ui(big_P, Pt, a);
+//Make a copy of f, f1, such that f1 monic and equiv to f mod p^a
+      F_mpz_poly_init(f1);
+      F_mpz_init( lc_inv );
+      if (F_mpz_is_one(lc)){
+         F_mpz_poly_set(f1, f);
+      }
+      else if (F_mpz_is_m1(lc)){
+         F_mpz_poly_neg(f1, f);
+      }
+      else{
+         F_mpz_mod(lc_inv, lc, big_P);
+         int OK = F_mpz_invert(lc_inv, lc_inv, big_P);
+         if (OK == 0){
+            printf(" some problem\n");
+            abort();
+         }
+         F_mpz_poly_scalar_mul(f1, f, lc_inv);
+         F_mpz_poly_smod(f1, f1, big_P);
+      }
+      while( (2 * e) <= a ){
+         _Tree_Hensel_Lift(link, v, w, e, 2*e, f1, 1, p, r, P);
+         e = 2*e;
+      }
+      F_mpz_clear(Pt);
+      F_mpz_poly_clear( f1 );
+      F_mpz_clear( lc_inv );
+//Have now Hensel lifted to p^a for the precalculated a, in the optimized version we will lift even less
+//Here let's make a list of Hensel lifted factors for grabbing information and trial testing.
+
+//Now we should undo the mystical link part to find the original local factors in original order, see the long explanation in the Hensel code
+      for(i = 0; i < 2*r -2; i++){
+         if (link[i] < 0){
+            F_mpz_poly_smod(v[i], v[i], P); 
+            F_mpz_poly_set(lifted_fac->factors[-link[i]-1],v[i]);
+            lifted_fac->exponents[-link[i]-1] = 1L; 
+         }
+      }
+      lifted_fac->num_factors = r;
+//Now we are ready to to the Zassenhaus testing... later the r > 20 (or even 10) test could go here
+      if (use_Hoeij_Novocin == 1){
+         solved_yet = F_mpz_poly_factor_sq_fr_vHN(final_fac, lifted_fac, f, P, exp, M, mexpo);
+         if (solved_yet == 0){
+//This is where we increase the Hensel Accuracy and go back
+            a = 2*a;
+         }
+      }
+      else{
+         F_mpz_poly_zassenhaus_naive(final_fac, lifted_fac, f, P, exp, lc);
+         solved_yet = 1;
+      }
+   }
+//Done factoring, just gotta clean house
+   for (i = 0; i < 2*r-2; i++){
+      F_mpz_poly_clear(v[i]);
+      F_mpz_poly_clear(w[i]);
+   }
+   F_mpz_poly_factor_clear(lifted_fac);
+   zmod_poly_clear(F);
+   F_mpz_clear(lc);
+   F_mpz_clear(big_P);
+   F_mpz_clear(P);
+   if (use_Hoeij_Novocin == 1){
+      F_mpz_mat_clear(M);
+   }
+   return;
+}
+
+void F_mpz_poly_factor(F_mpz_poly_factor_t final_fac, F_mpz_t cong, F_mpz_poly_t G){
+   if (G->length == 0){
+      F_mpz_set_ui(cong, 0UL);
+      return;
+   }
+   if (G->length == 1){
+      F_mpz_set(cong, G->coeffs);
+      return;
+   }
+   F_mpz_poly_t g;
+   F_mpz_poly_init(g);
+
+   if (G->length == 2){
+      F_mpz_poly_content(cong, G);
+      F_mpz_poly_scalar_div_exact(g, G, cong);
+      F_mpz_poly_factor_insert( final_fac, g, 1UL);
+      return;
+   }
+//Does a presearch for a factor of form x^(x_pow)
+   ulong x_pow = 0;
+   while (F_mpz_is_zero(G->coeffs + x_pow)){
+      x_pow++; 
+   }
+   if (x_pow != 0){
+      F_mpz_poly_t temp_x;
+      F_mpz_poly_init(temp_x);
+      F_mpz_poly_set_coeff_ui(temp_x, 1, 1);
+      F_mpz_poly_factor_insert(final_fac, temp_x, x_pow);
+      F_mpz_poly_clear(temp_x);
+   }
+   F_mpz_poly_right_shift(g, G, x_pow);
+   F_mpz_poly_factor_t sq_fr_fac;
+//Could make other tests for x-1 or simple things 
+// maybe take advantage of the composition algorithm
+   F_mpz_poly_factor_init( sq_fr_fac );
+   F_mpz_poly_squarefree(sq_fr_fac, cong, g);
+//Now we can go through and factor each square free guy and add it to final factors.
+   for(ulong j = 0; j < sq_fr_fac->num_factors; j++){
+      F_mpz_poly_factor_sq_fr_prim(final_fac, sq_fr_fac->exponents[j], sq_fr_fac->factors[j]);
+   }
+   F_mpz_poly_factor_clear( sq_fr_fac );
+   F_mpz_poly_clear(g);
+}
+
+/*============================================================================
+
+   Hoeij/Novocin approach
+
+============================================================================*/
+
+void _F_mpz_poly_factor_CLD_mat(F_mpz_mat_t res, F_mpz_poly_t F, F_mpz_poly_factor_t lifted_fac, F_mpz_t P, ulong N)
+{
+//Here we want to take F such that the product of the monic lifted_facs is equiv to F mod P and find top N and 
+//bottom N coeffs of each local Log Derivative.  Store the results in res with an extra row at the bottom for the bounds for that column
+   ulong n;
+   ulong d = lifted_fac->num_factors;
+   F_mpz_poly_t gd,gcld;
+
+   if (2*N >= F->length - 1){
+      F_mpz_mat_clear(res);
+      F_mpz_mat_init(res, d+1, F->length - 1);
+      for (long i = 0; i < F->length - 1; i++)
+         F_mpz_poly_CLD_bound(res->rows[d] + i, F, i);
+
+      for (long i = 0; i < d; i++){
+         F_mpz_poly_init(gd);
+         F_mpz_poly_init(gcld);
+         F_mpz_poly_derivative(gd, lifted_fac->factors[i]);
+         F_mpz_poly_mul(gcld, F, gd);
+         F_mpz_poly_div(gcld, gcld, lifted_fac->factors[i]);
+         F_mpz_poly_smod(gcld, gcld, P);
+         for (long j = 0; j < F->length - 1; j++)
+            F_mpz_set(res->rows[i] + j, gcld->coeffs + j);
+         F_mpz_poly_clear(gd);
+         F_mpz_poly_clear(gcld);
+      }
+      return;
+   }
+   n = N;
+   F_mpz_mat_clear(res);
+   F_mpz_mat_init(res, d+1, 2*n);
+
+   for (long i = 0; i < n; i++){
+      F_mpz_poly_CLD_bound(res->rows[d] + i, F, i);
+      F_mpz_poly_CLD_bound(res->rows[d] + 2*n - 1 - i, F, F->length - 2 -i);
+   }
+   F_mpz_t temp[n];
+   for (long i = 0; i < n; i++)
+      F_mpz_init(temp[i]);
+
+   for (long i = 0; i < d; i++){
+      F_mpz_poly_init(gd);
+      F_mpz_poly_init(gcld);
+
+      F_mpz_poly_derivative(gd, lifted_fac->factors[i]);
+//Should do upper and lower trunc multiplication soon, for speed sake
+      F_mpz_poly_mul(gcld, F, gd);
+      F_mpz_poly_div_trunc_modp(temp, gcld, lifted_fac->factors[i], P, n);
+
+      for (long j = 0; j < n; j++)
+         F_mpz_set(res->rows[i] + j, temp[j]);
+      F_mpz_poly_div_upper_trunc_modp(temp, gcld, lifted_fac->factors[i], P, n);
+      for (long j = 0; j < n; j++)
+         F_mpz_set(res->rows[i] + 2*n -1 - j, temp[j]);
+      F_mpz_poly_clear(gd);
+      F_mpz_poly_clear(gcld);
+   }
+
+   for (long i = 0; i < n; i++)
+      F_mpz_clear(temp[i]);
+}
+
+int _F_mpz_poly_try_to_solve(int num_facs, ulong * part, F_mpz_poly_factor_t final_fac, F_mpz_poly_factor_t lifted_fac, F_mpz_poly_t F, F_mpz_t P, ulong exp, F_mpz_t lc)
+{
+   if (num_facs == 1){
+      F_mpz_poly_factor_insert(final_fac, F, exp);
+//      printf("Proved irreducibility\n");
+      return 1;
+   }
+//we know that there is a 0-1 potential basis, let's make the potential factors and sort them by degree
+   F_mpz_poly_factor_t trial_factors;
+   F_mpz_poly_factor_init(trial_factors);
+
+   F_mpz_poly_t tryme;
+   F_mpz_poly_init(tryme);
+   F_mpz_t temp_lc;
+   F_mpz_init(temp_lc);
+
+   ulong r = lifted_fac->num_factors;
+/*   ulong biggest, second;
+   biggest = 0;
+   second = 0;*/
+   for (int i = 1; i <= num_facs; i++){
+      F_mpz_poly_fit_length(tryme, 1UL);
+      tryme->length = 1UL;
+      F_mpz_set(tryme->coeffs + 0, lc);
+      for (int j = 0; j < r; j++){
+         if (part[j] == i)
+         {
+            F_mpz_poly_mul(tryme, tryme, lifted_fac->factors[j]);
+            F_mpz_poly_smod(tryme, tryme, P);
+         }
+      }
+      F_mpz_init(temp_lc);
+      F_mpz_poly_content(temp_lc, tryme);
+      F_mpz_poly_scalar_div_exact(tryme, tryme, temp_lc);
+      F_mpz_poly_factor_insert(trial_factors, tryme, 1UL);
+/*      if (tryme->length > biggest){
+         second = biggest;
+         biggest = tryme->length
+      }
+      else if (tryme-> length > second)
+         second = tryme->length;*/
+   }
+//OK this was not optimal but we now have num_facs potential factors stored in trial_factors
+//Would be more optimal if I did not multiply by lc yet, or if I trial divided along the way...
+//BUT with the early termination we want to attempt our trial divisions from the bottom up so that
+//if we find all but the largest factor and it matches our bound for the number of factors then 
+//we've proven the factorization is legit
+//maybe figure out what lengths I can prove this way and if I can prove biggest hooray go for it, if I can't then
+//maybe I can prove second, in which case sort, if neither then try, maybe Hensel lift again
+   for (int i = 0; i < num_facs - 1; i++){
+      for (int j = i+1; j <  num_facs; j++){
+         if( (trial_factors->factors[i])->length < (trial_factors->factors[j])->length )
+            F_mpz_poly_swap(trial_factors->factors[i], trial_factors->factors[j]);
+      }
+   }
+   F_mpz_poly_t f,Q,R;
+   F_mpz_poly_init(f);
+   F_mpz_poly_init(Q);
+   F_mpz_poly_init(R);
+   F_mpz_poly_set(f, F);
+   for (int i = 0; i < trial_factors->num_factors; i++){
+      if (num_facs == 1){
+         for (int j = 0; j < i; j++)
+            F_mpz_poly_factor_insert(final_fac, trial_factors->factors[j], exp);
+         F_mpz_poly_factor_insert(final_fac, f, exp);
+         return 1;
+      }
+      F_mpz_poly_divrem(Q, R, f, trial_factors->factors[i]);
+      if (R->length == 0){
+         //found one!!!! Don't insert just yet in case we find some but not all (which we handle suboptimally at the moment)
+//         F_mpz_poly_factor_insert(final_fac, trial_factors->factors[i], exp);
+         F_mpz_poly_set(f, Q);
+         num_facs--;
+      }
+      else{
+//Did not solve
+
+/**** 
+      Possibility of handling some things faster here by switching to Zassenhaus when we haven't solved but number of factors is small
+      also we are not keeping the potentially valuable info in part (although indirectly we are...)
+      Maybe it would be worth it to hand back the 0-1 version of U and start from scratch with new data (or recalculate old data)... 
+      Sorry for all the comments but I took away the part/zassenhaus section for the moment.  My reasoning is that we might not have tons of Hensel 
+      lifting in the final version in which case Zassenhaus could fail... which would suck to program that exception too or even figure out how to 
+      use what it did find.  So for now the 'easy' route is just going back to van Hoeij regardless of the number of proven factors. 
+ ****/
+
+//         if (num_facs > 10){
+// Still need van Hoeij and Hensel and stuff
+
+         return 0;
+//         }
+//         else{
+//Attempt part/zassenhaus.  We haven't found the right answers yet, but part could be used to help... maybe introduce a used array for keeping track of what's already been found
+//Nah simplest would be to just pass the trial factors rather than lifted factors... 
+//Isn't it concievable that we could reach this point with not enough Hensel Lifting?  In that case we'll need a check of landau bound...
+//            printf("Will have solved once I write the partZassenhaus\n");
+//            return 1;
+//         }
+      }
+   }
+   F_mpz_poly_clear(f);
+   F_mpz_poly_clear(Q);
+   F_mpz_poly_clear(R);
+
+   F_mpz_clear(temp_lc);
+   F_mpz_poly_clear(tryme);
+   F_mpz_poly_factor_clear(trial_factors);
+   return 0;
+}
+
+int _F_mpz_mat_check_if_solved(F_mpz_mat_t M, ulong r, F_mpz_poly_factor_t final_fac, F_mpz_poly_factor_t lifted_fac, F_mpz_poly_t F, F_mpz_t P, ulong exp, F_mpz_t lc){
+   F_mpz_mat_t U;
+   F_mpz_mat_init(U,0,0);
+   F_mpz_mat_get_U(U, M, r);
+   ulong part[U->c];
+   for (ulong j = 0; j < U->c; j++)
+      part[j] = 0;
+   int ok = F_mpz_mat_check_0_1(part, U);
+   if (ok == 0){
+//not a 0-1 basis
+      F_mpz_mat_clear(U);
+      return 0;
+   }
+   int trym = _F_mpz_poly_try_to_solve(ok, part, final_fac, lifted_fac, F, P, exp, lc);
+   F_mpz_mat_clear(U);
+   return trym;
+}
+
+int F_mpz_poly_factor_sq_fr_vHN(F_mpz_poly_factor_t final_fac, F_mpz_poly_factor_t lifted_fac, F_mpz_poly_t F, F_mpz_t P, ulong exp, F_mpz_mat_t M, int * cexpo)
+{
+   int return_me = 0;
+   ulong N = F->length - 1;
+   F_mpz_t lc;
+   F_mpz_init(lc);
+   F_mpz_set(lc, F->coeffs + N);
+
+   ulong r = lifted_fac->num_factors;
+   ulong s = r;
+   F_mpz_mat_t col;
+   F_mpz_mat_init(col, r, 1);
+   ulong cur_col = 0;
+   ulong worst_exp;
+
+   F_mpz_t B;
+   F_mpz_init(B);
+   F_mpz_set_ui(B, r + 1);
+//For the first run we'll only use 20 coeffs worth of data, should solve 99% of all 'random' polynomials
+   ulong num_coeffs = 10UL;
+   F_mpz_mat_t data;
+   F_mpz_mat_init(data, 0, 0);
+   _F_mpz_poly_factor_CLD_mat(data, F, lifted_fac, P, num_coeffs);
+
+   int all_coeffs = 0;
+   if (data->c >= F->length - 1)
+      all_coeffs = 1;
+//assume that cexpo is correct for the first M->c entries, zero out the potential new entries
+   for (ulong i = M->c; i < M->c + 2*(F->length - 1); i++)
+      cexpo[i] = 0;
+
+   F_mpz_t temp;
+   F_mpz_init(temp);
+   ulong sqN = (ulong) sqrt( (double) (N) );
+//   printf("%ld sqN, %f sqrt(N)\n", sqN, sqrt( (double) (N) ) );
+   int ok, col_cnt, solved;
+   long newd;
+   col_cnt = 0;
+   solved = 0;
+   while ((all_coeffs != 2) && (return_me == 0)){
+      for (cur_col = 0; cur_col < data->c; cur_col++){
+         F_mpz_mul_ui(temp, data->rows[r] + cur_col, sqN);
+         worst_exp = F_mpz_bits(temp);   
+         for( ulong i = 0; i < r; i++)
+            F_mpz_set(col->rows[i], data->rows[i] + cur_col);
+         ok = _F_mpz_mat_next_col(M, P, col, worst_exp);
+         if (ok != 0){
+            cexpo[r + col_cnt] = ok;
+//         F_mpz_mat_print_pretty(M);
+            newd = LLL_heuristic_d_2exp_with_removal(M, cexpo, B);
+            F_mpz_mat_resize(M, newd, M->c);
+            col_cnt++;
+//         This next line is what makes it 'gradual'... could try to prove that doing the same column twice won't add another P
+//         But it's all the same
+            cur_col--;
+            if (newd == 1){
+               F_mpz_poly_factor_insert(final_fac, F, exp);
+               return_me = 1;
+               solved = 1;
+               break;
+            }
+            solved =  _F_mpz_mat_check_if_solved(M, r, final_fac, lifted_fac, F, P, exp, lc);
+            if (solved == 1){
+               return_me = 1;
+               break;
+            }
+         }
+      }
+      if (solved == 0){
+//This is reached when the data wasn't large enough to need LLL, this means that you had a super easy or super hard factorization
+         solved =  _F_mpz_mat_check_if_solved(M, r, final_fac, lifted_fac, F, P, exp, lc);
+         if (solved == 1){
+//This is the easy case...
+            return_me = 1;
+         }
+         else{
+//This is the hard one...
+            if (all_coeffs == 1){
+               all_coeffs = 2;
+//This is the worst case, all coeffs have been used and we still haven't solved the problem so more Hensel lifting needed
+            }
+            else{
+               num_coeffs = num_coeffs * 2;
+               _F_mpz_poly_factor_CLD_mat(data, F, lifted_fac, P, num_coeffs);
+               if (data->c >= F->length - 1)
+                  all_coeffs = 1;
+            }
+         }
+      }
+   }
+//   F_mpz_mat_print_pretty(M);
+//   F_mpz_poly_factor_print(final_fac);
+   F_mpz_clear(B);
+   F_mpz_clear(lc);
+   F_mpz_clear(temp);
+   F_mpz_mat_clear(data);
+   F_mpz_mat_clear(col);
+   return return_me;
+}
+

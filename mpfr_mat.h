@@ -1,5 +1,6 @@
 /*
   Copyright 2005, 2006 Damien Stehlé.
+  Copyright 2009, William Hart.
 
   This program is free software; you can redistribute it and/or modify it
   under the terms of the GNU General Public License as published by the
@@ -17,23 +18,18 @@
   02111-1307, USA.
 */
 
-#include "F_mpz_mat.h"
+#include <gmp.h>
+#include <mpfr.h>
 
-double ** d_mat_init(int d, int n);
+mpfr_t ** mpfr_mat_init(int d, int n);
 
-void d_mat_clear(double ** B);
+void mpfr_mat_clear(mpfr_t ** B, int d, int n);
 
-void d_mat_print(double ** B, int * expo, int d, int n);
+void mpfr_mat_print(mpfr_t ** B, int d, int n);
 
-double d_vec_scalar_product(double * vec1, double * vec2, int n);
+int mpfr_vec_scalar_product(mpfr_t sp, mpfr_t * vec1, mpfr_t * vec2, int n);
 
-double d_vec_scalar_product_heuristic(double * vec1, double * vec2, int n, F_mpz_mat_t B, ulong kappa, ulong j, long exp_adj);
-
-double d_vec_norm(double * vec, int n);
-
-double d_2exp_vec_scalar_product(double * vec1, double * vec2, int n, int *cexpo, F_mpz_mat_t B, ulong kappa, ulong j);
-
-double d_2exp_vec_norm(double * vec, int n, int *cexpo);
+void mpfr_vec_norm(mpfr_t norm, mpfr_t * vec, int n);
 
 
 

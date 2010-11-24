@@ -28,6 +28,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <gmp.h>
+#include <mpfr.h>
 
 #include "flint.h"
 #include "mpn_extras.h"
@@ -268,15 +269,13 @@ void F_mpz_randomm(F_mpz_t f, const mpz_t in)
 
 void F_mpz_set_si(F_mpz_t f, const long val)
 {
-   if (FLINT_ABS(val) > COEFF_MAX) // val is large
+   if (FLINT_ABS(val) > (ulong) COEFF_MAX) // val is large
 	{
-		
 		__mpz_struct * mpz_coeff = _F_mpz_promote(f);
 		mpz_set_si(mpz_coeff, val);
 		
 	} else 
 	{
-		
 		_F_mpz_demote(f);
 		
 		*f = val; // val is small
@@ -395,6 +394,65 @@ void F_mpz_set_mpz(F_mpz_t f, const mpz_t x)
 	}			
 }
 
+void F_mpz_get_mpfr(mpfr_t x, const F_mpz_t f)
+{
+   F_mpz d = *f;
+
+   if (!COEFF_IS_MPZ(d))
+   {
+      mpfr_set_si(x, d, GMP_RNDN);
+      return;
+   } else
+   {
+      mpfr_set_z(x, F_mpz_arr + COEFF_TO_OFF(d), GMP_RNDN);
+      return;
+   }
+}
+
+void F_mpz_set_mpfr(F_mpz_t f, const mpfr_t x)
+{
+   F_mpz d = *f;
+
+   if (!COEFF_IS_MPZ(d)) // f is small
+   {
+      if (mpfr_fits_slong_p(x, GMP_RNDN)) // x fits in a long
+      {
+         long cx = mpfr_get_si(x, GMP_RNDN);
+         
+         F_mpz_set_si(f, cx);
+      } else // x is large
+      {
+         __mpz_struct * mpz_ptr = _F_mpz_promote(f);
+         mpfr_get_z(mpz_ptr, x, GMP_RNDN);
+      }
+      
+      return;
+   } else // f is large
+   {
+      mpfr_get_z(F_mpz_arr + COEFF_TO_OFF(d), x, GMP_RNDN);
+
+      _F_mpz_demote_val(f); // may actually be small
+      return;
+   }
+}
+
+int F_mpz_set_mpfr_2exp(F_mpz_t f, const mpfr_t x)
+{
+   F_mpz d = *f;
+   int exp;
+
+   if (!COEFF_IS_MPZ(d)) // f is small
+   {
+      __mpz_struct * mpz_ptr = _F_mpz_promote(f);
+      exp = mpfr_get_z_exp(mpz_ptr, x);
+   } else
+      exp = mpfr_get_z_exp(F_mpz_arr + COEFF_TO_OFF(d), x);
+   
+   _F_mpz_demote_val(f); // x may have been small
+      
+   return exp;
+}
+
 void F_mpz_set_limbs(F_mpz_t f, const mp_limb_t * x, const ulong limbs)
 {
 	if (limbs == 0L) // x is zero
@@ -504,7 +562,7 @@ int F_mpz_equal(const F_mpz_t f, const F_mpz_t g)
 {
 	if (f == g) return 1; // aliased inputs
 	
-	if (!COEFF_IS_MPZ(*f)) return (*f == *g); // if f is large it can't be equal to g
+   if (!COEFF_IS_MPZ(*f)) return (*f == *g); // if f is large it can't be equal to g
 	else if (!COEFF_IS_MPZ(*g)) return 0; // f is large, so if g isn't....
 	else 
 	{
@@ -646,6 +704,13 @@ void F_mpz_read(F_mpz_t f)
 	F_mpz_set_mpz(f, temp);
 
 	mpz_clear(temp);
+}
+
+void F_mpz_sscanf(F_mpz_t f, const char * str)
+{
+   __mpz_struct * mpz_ptr = _F_mpz_promote(f);
+   gmp_sscanf(str, "%Zd", mpz_ptr);
+   _F_mpz_demote_val(f);
 }
 
 /*===============================================================================
@@ -912,6 +977,12 @@ void F_mpz_mul2(F_mpz_t f, const F_mpz_t g, const F_mpz_t h)
 void F_mpz_mul_2exp(F_mpz_t f, const F_mpz_t g, const ulong exp)
 {
 	F_mpz d = *g;
+
+   if (d == 0L) 
+   {
+      F_mpz_zero(f);
+      return;
+   }
 
 	if (!COEFF_IS_MPZ(d)) // g is small
 	{
@@ -1999,3 +2070,88 @@ void F_mpz_multi_CRT_ui(F_mpz_t output, ulong * residues,
 {
 	__F_mpz_multi_CRT_ui(output, residues, comb, 1, comb_temp, temp, temp2);
 }
+
+/*============================================================================
+
+   New and potentially Naive F_mpz functions (no test)
+
+============================================================================*/
+
+void F_mpz_set_d_2exp(F_mpz_t output, double mant, long exp){
+
+//This function sets F_mpz to an integer closest to mant*2^exp
+   if (exp >= 53){
+      mpz_t temp;
+      mpz_init(temp);
+      mpz_set_d(temp, mant * pow(2, 53));
+      F_mpz_set_mpz(output, temp);
+      mpz_clear(temp);
+      F_mpz_mul_2exp(output, output, (ulong)exp - 53UL);
+      return;
+   }
+   else{
+      mpz_t temp;
+      mpz_init(temp);
+      mpz_set_d(temp, mant * pow(2, (double) exp));
+      F_mpz_set_mpz(output, temp);
+      mpz_clear(temp);
+      return;
+   }
+
+}
+
+void F_mpz_smod(F_mpz_t res, F_mpz_t f, F_mpz_t p){
+
+   if (F_mpz_is_zero(p)){
+      printf("FLINT Exception: Division by zero\n");
+      abort();
+   }
+
+   if (F_mpz_is_one(p)){
+      F_mpz_zero(res);
+      return;
+   }
+
+   F_mpz_mod(f, f, p);
+
+   F_mpz_t pdiv2;
+   F_mpz_init(pdiv2);
+
+   F_mpz_div_2exp(pdiv2, p, 1);
+
+   if ( F_mpz_cmp(f, pdiv2) > 0){
+      F_mpz_sub(res, f, p);
+   }
+   else{
+      F_mpz_set(res, f);
+   }
+   F_mpz_clear(pdiv2);
+}
+
+long _F_mpz_add_2exp(F_mpz_t res, F_mpz_t x1, long exp1, F_mpz_t x2, long exp2){
+
+   long res_exp;
+   F_mpz_t temp;
+   F_mpz_init(temp);
+
+   if (exp1 <= exp2){
+      res_exp = exp1;
+      F_mpz_mul_2exp(temp, x2, exp2 - exp1);
+      F_mpz_add(res, x1, temp);
+   }
+   else{
+      res_exp = exp2;
+      F_mpz_mul_2exp(temp, x1, exp1 - exp2);
+      F_mpz_add(res, x2, temp);
+   }
+
+   F_mpz_clear(temp);
+   return res_exp;
+}
+
+void F_mpz_2exp_get_mpfr(mpfr_t x, const F_mpz_t f, long exp)
+{
+      F_mpz_get_mpfr(x, f);
+      mpfr_mul_2si(x, x, exp, GMP_RNDN);
+}
+

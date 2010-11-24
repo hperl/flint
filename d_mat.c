@@ -29,6 +29,7 @@
 #include <gmp.h>
 
 #include "d_mat.h"
+#include "F_mpz_mat.h"
 
 double ** d_mat_init(int d, int n)
 {
@@ -75,6 +76,62 @@ double d_vec_scalar_product(double * vec1, double * vec2, int n)
   return sum;
 } 
 
+double d_vec_scalar_product_heuristic(double * vec1, double * vec2, int n, F_mpz_mat_t B, ulong kappa, ulong j, long exp_adj)
+{
+  double sum;
+
+  sum = vec1[0] * vec2[0];
+  for (long i = 1; i < n; i++)
+     sum += vec1[i] * vec2[i];
+
+  double tmp = d_vec_norm(vec1, n);
+  double tmp2 = d_vec_norm(vec2, n);
+
+  tmp = ldexp(tmp*tmp2, -70);
+  tmp2 = sum*sum;
+
+  if (tmp2 <= tmp)
+  {
+     F_mpz_t sp;
+     F_mpz_init(sp);
+     ulong exp;
+     F_mpz_mat_row_scalar_product(sp, B, kappa, B, j, 0, n);
+     sum = F_mpz_get_d_2exp(&exp, sp);
+     sum = ldexp(sum, exp - exp_adj);
+     F_mpz_clear(sp);
+  }
+
+  return sum;
+} 
+
+double d_2exp_vec_scalar_product(double * vec1, double * vec2, int n, int *cexpo, F_mpz_mat_t B, ulong kappa, ulong j)
+{
+  double sum;
+
+  sum = ldexp(vec1[0] * vec2[0], 2*cexpo[0]);
+  for (long i = 1; i < n; i++)
+     sum += ldexp(vec1[i] * vec2[i], 2*cexpo[i]);
+
+  double tmp = d_2exp_vec_norm(vec1, n, cexpo);
+  double tmp2 = d_2exp_vec_norm(vec2, n, cexpo);
+
+  tmp = ldexp(tmp*tmp2, -70);
+  tmp2 = sum*sum;
+
+  if (tmp2 <= tmp)
+  {
+     F_mpz_t sp;
+     F_mpz_init(sp);
+     ulong exp;
+     F_mpz_mat_row_scalar_product_2exp(sp, B, kappa, B, j, 0, n, cexpo);
+     sum = F_mpz_get_d_2exp(&exp, sp);
+     sum = ldexp(sum, exp);
+     F_mpz_clear(sp);
+  }
+
+  return sum;
+} 
+
 double d_vec_norm(double * vec, int n)
 {
   double sum;
@@ -85,5 +142,16 @@ double d_vec_norm(double * vec, int n)
 
   return sum;
 
+} 
+
+double d_2exp_vec_norm(double * vec, int n, int *cexpo)
+{
+  double sum;
+
+  sum = ldexp(vec[0] * vec[0], 2*cexpo[0]);
+  for (long i = 1 ; i < n ; i++)
+     sum += ldexp(vec[i] * vec[i], 2*cexpo[i]);
+
+  return sum;
 } 
 

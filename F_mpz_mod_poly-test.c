@@ -1512,21 +1512,21 @@ void F_mpz_mod_poly_test_all()
 #if TESTFILE
 #endif
    
-   // RUN_TEST(F_mpz_mod_poly_init_realloc_clear); 
-   // RUN_TEST(F_mpz_mod_poly_to_mpz_poly); 
-   // RUN_TEST(F_mpz_mod_poly_to_F_mpz_poly); 
-   // RUN_TEST(F_mpz_mod_poly_to_zmod_poly); 
-   // RUN_TEST(F_mpz_mod_poly_setequal); 
-   // RUN_TEST(F_mpz_mod_poly_swap); 
-   // RUN_TEST(F_mpz_mod_poly_left_right_shift); 
-   // RUN_TEST(F_mpz_mod_poly_add); 
-   // RUN_TEST(F_mpz_mod_poly_sub); 
-   // RUN_TEST(F_mpz_mod_poly_scalar_mul); 
-   // RUN_TEST(F_mpz_mod_poly_mul); 
-   // RUN_TEST(F_mpz_mod_poly_mul_trunc_left); 
-   // RUN_TEST(F_mpz_mod_poly_divrem_basecase); 
-   // RUN_TEST(F_mpz_mod_poly_divrem_divconquer);
-   RUN_TEST(F_mpz_mod_poly_gcd_euclidean);
+   RUN_TEST(F_mpz_mod_poly_init_realloc_clear); 
+   RUN_TEST(F_mpz_mod_poly_to_mpz_poly); 
+   RUN_TEST(F_mpz_mod_poly_to_F_mpz_poly); 
+   RUN_TEST(F_mpz_mod_poly_to_zmod_poly); 
+   RUN_TEST(F_mpz_mod_poly_setequal); 
+   RUN_TEST(F_mpz_mod_poly_swap); 
+   RUN_TEST(F_mpz_mod_poly_left_right_shift); 
+   RUN_TEST(F_mpz_mod_poly_add); 
+   RUN_TEST(F_mpz_mod_poly_sub); 
+   RUN_TEST(F_mpz_mod_poly_scalar_mul); 
+   RUN_TEST(F_mpz_mod_poly_mul); 
+   RUN_TEST(F_mpz_mod_poly_mul_trunc_left); 
+   RUN_TEST(F_mpz_mod_poly_divrem_basecase); 
+   RUN_TEST(F_mpz_mod_poly_divrem_divconquer);
+   // RUN_TEST(F_mpz_mod_poly_gcd_euclidean);
    
    printf(all_success ? "\nAll tests passed\n" :
                         "\nAt least one test FAILED!\n");

@@ -1,6 +1,7 @@
 /*
    Copyright 2005, 2006 Damien Stehlé.
-   Copyright 2008 William Hart
+   Copyright 2008 William Hart, 
+   Copyright 2009 William Hart, Andy Novocin
 
    This program is free software; you can redistribute it and/or modify it
    under the terms of the GNU General Public License as published by the
@@ -26,21 +27,24 @@
 
 /****************************************************************************
 
-   F_mpz_LLL_fast_d.h: Lattice reduction of multiprecision integer matrices using doubles
-	                    for storing approximate Gram Schmidt Orthogonalisations
+   F_mpz_LLL_heuristic_mpfr.h: Lattice reduction of multiprecision integer matrices using mpfrs
+	                    for storing approximate Gram Schmidt Orthogonalisations and full precision scalar products occasionally.
 
 *****************************************************************************/
 
-#ifndef FLINT_FMPZ_LLL_FAST_D_H
-#define FLINT_FMPZ_LLL_FAST_D_H
+#ifndef FLINT_FMPZ_LLL_HEURISTIC_MPFR_H
+#define FLINT_FMPZ_LLL_HEURISTIC_MPFR_H
 
 #ifdef __cplusplus
  extern "C" {
 #endif
  
 #include <gmp.h>
+#include <mpfr.h>
 #include "flint.h"
+#include "mpfr_mat.h"
 #include "F_mpz_mat.h"
+#include "F_mpz_LLL_fast_d.h"
 
 #ifndef NAN
 #define NAN (0.0/0.0)
@@ -63,28 +67,23 @@ double halfplus, onedothalfplus, ctt;
 #define DELTA 0.99
 #endif
 
-ulong getShift(F_mpz_mat_t B);
-
-void Babai (int kappa, F_mpz_mat_t B, double **mu, double **r, double *s, 
-                            double **appB, int *expo, double **appSP, 
-                         int a, int zeros, int kappamax, int n);
-
-void Babai_heuristic_d_2exp(int kappa, F_mpz_mat_t B, double **mu, double **r, double *s, 
-                            double **appB, int *expo, double **appSP, 
-                         int a, int zeros, int kappamax, int n, int *cexpo);
-
-void Babai_heuristic_d (int kappa, F_mpz_mat_t B, double **mu, double **r, double *s, 
-       double **appB, int *expo, double **appSP, 
-       int a, int zeros, int kappamax, int n);
+void Babai_heuristic(int kappa, F_mpz_mat_t B, mpfr_t **mu, mpfr_t **r, mpfr_t *s, 
+       mpfr_t **appB, mpfr_t **appSP, int a, int zeros, int kappamax, 
+       int n, mpfr_t tmp, mpfr_t rtmp);
                          
-void LLL (F_mpz_mat_t B);
+void LLL_heuristic(F_mpz_mat_t B);
 
-void LLL_heuristic_d_2exp (F_mpz_mat_t B, int *cexpo);
+long LLL_heuristic_with_removal(F_mpz_mat_t B, F_mpz_t gs_B);
 
-int LLL_heuristic_d_2exp_with_removal(F_mpz_mat_t B, int *cexpo, F_mpz_t gs_B);
+void Babai_heuristic_2exp(int kappa, F_mpz_mat_t B, mpfr_t **mu, mpfr_t **r, mpfr_t *s, 
+       mpfr_t **appB, mpfr_t **appSP, 
+       int a, int zeros, int kappamax, int n, mpfr_t tmp, mpfr_t rtmp, int * cexpo);
 
-int LLL_heuristic_d_with_removal(F_mpz_mat_t B, F_mpz_t gs_B);
-       
+void LLL_heuristic_2exp(F_mpz_mat_t B, int * cexpo);
+
+long LLL_heuristic_2exp_with_removal(F_mpz_mat_t B, int * cexpo, F_mpz_t gs_B);
+
+
 #ifdef __cplusplus
  }
 #endif

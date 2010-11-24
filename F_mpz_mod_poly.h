@@ -37,6 +37,7 @@
 #include "memory-manager.h"
 #include "mpn_extras.h"
 #include "long_extras.h"
+#include "zmod_poly.h"
 
 #ifndef _F_MPZ_MOD_POLY_H_
 #define _F_MPZ_MOD_POLY_H_
@@ -176,6 +177,49 @@ void _F_mpz_mod_poly_attach_F_mpz_poly(F_mpz_mod_poly_t out, const F_mpz_poly_t 
    out->coeffs = in->coeffs;
    out->length = in->length;
    out->alloc = in->alloc;
+}
+
+/* 
+   Attach a F_mpz_mod_poly to a zmod_poly. Allows one to temporarily treat
+   an F_mpz_mod_poly as though it were an zmod_poly.
+*/
+static inline
+void _zmod_poly_attach_F_mpz_mod_poly(zmod_poly_t out, const F_mpz_mod_poly_t in)
+{
+   out->coeffs = (ulong *) in->coeffs;
+   out->length = in->length;
+   out->alloc = in->alloc;
+   out->p = *(in->P);
+   out->p_inv = z_precompute_inverse(out->p);
+#if USE_ZN_POLY
+   zn_mod_init(out->mod, out->p); 
+#endif
+}
+
+/* 
+   Attach an zmod_poly to an F_mpz_mod_poly. Allows one to return an 
+   F_mpz_mod_poly, which is temporarily being treated as a zmod_poly,
+   to its original F_mpz_mod_poly object.
+*/
+static inline
+void _F_mpz_mod_poly_attach_zmod_poly(F_mpz_mod_poly_t out, const zmod_poly_t in)
+{
+   out->coeffs = (F_mpz *) in->coeffs;
+   out->length = in->length;
+   out->alloc = in->alloc;
+}
+
+/* 
+   Attach poly1 to poly2.
+   Assumes the polynomial poly1 and its modulus P are not modified while attached.
+*/
+static inline
+void _F_mpz_mod_poly_attach(F_mpz_mod_poly_t poly1, const F_mpz_mod_poly_t poly2)
+{
+	poly1->coeffs = poly2->coeffs;
+	poly1->length = poly2->length;
+   
+   *(poly1->P) = *(poly2->P);
 }
 
 /* 
@@ -332,6 +376,10 @@ void F_mpz_mod_poly_mul_trunc_left(F_mpz_mod_poly_t res, const F_mpz_mod_poly_t 
 ****************************************************************************/
 
 void F_mpz_mod_poly_divrem_basecase(F_mpz_mod_poly_t Q, F_mpz_mod_poly_t R, const F_mpz_mod_poly_t A, const F_mpz_mod_poly_t B);
+
+void F_mpz_mod_poly_divrem_basecase_low(F_mpz_mod_poly_t Q, F_mpz_mod_poly_t R, const F_mpz_mod_poly_t A, const F_mpz_mod_poly_t B);
+
+void F_mpz_mod_poly_div_divconquer_recursive_low(F_mpz_mod_poly_t Q, F_mpz_mod_poly_t BQ, const F_mpz_mod_poly_t A, const F_mpz_mod_poly_t B);
 
 void F_mpz_mod_poly_div_divconquer_recursive(F_mpz_mod_poly_t Q, F_mpz_mod_poly_t BQ, const F_mpz_mod_poly_t A, const F_mpz_mod_poly_t B);
 

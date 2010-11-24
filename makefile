@@ -22,14 +22,14 @@ endif
 
 CPP = $(FLINT_CPP) 
 
-LIBS = -L$(FLINT_GMP_LIB_DIR) $(FLINT_LINK_OPTIONS) -lgmp -lpthread -lm
+LIBS = -L$(FLINT_GMP_LIB_DIR) $(FLINT_LINK_OPTIONS) -lgmp -lmpfr -lpthread -lm
 
-LIBS2 = -L$(FLINT_GMP_LIB_DIR) -L$(FLINT_NTL_LIB_DIR) $(FLINT_LINK_OPTIONS) -lgmp -lpthread -lntl -lm 
+LIBS2 = -L$(FLINT_GMP_LIB_DIR) -L$(FLINT_NTL_LIB_DIR) $(FLINT_LINK_OPTIONS) -lgmp -lmpfr -lpthread -lntl -lm 
 
 ifndef FLINT_NTL_INCLUDE_DIR
-	INCS = -I$(FLINT_GMP_INCLUDE_DIR) 
+	INCS = -I$(FLINT_GMP_INCLUDE_DIR) -I$(FLINT_MPFR_INCLUDE_DIR) 
 else
-	INCS = -I$(FLINT_GMP_INCLUDE_DIR) -I$(FLINT_NTL_INCLUDE_DIR)
+	INCS = -I$(FLINT_GMP_INCLUDE_DIR) -I$(FLINT_MPFR_INCLUDE_DIR) -I$(FLINT_NTL_INCLUDE_DIR)
 endif
 
 CFLAGS = $(INCS) $(FLINT_TUNE) -O2
@@ -64,11 +64,16 @@ HEADERS = \
 	long_extras.h \
 	packed_vec.h \
 	zmod_poly.h \
+	F_mpz_mod_poly.h \
 	theta.h \
 	zmod_mat.h \
 	mpz_mat.h \
 	d_mat.h \
+	F_mpz_mat.h \
+	mpfr_mat.h \
 	F_mpz.h \
+	F_mpz_LLL_fast_d.h \
+	F_mpz_LLL_heuristic_mpfr.h \
 	F_mpz_poly.h \
 	QS/tinyQS.h
 
@@ -106,11 +111,16 @@ FLINTOBJ = \
 	long_extras.o \
 	packed_vec.o \
 	zmod_poly.o \
+ 	F_mpz_mod_poly.o \
 	theta.o \
 	zmod_mat.o \
 	mpz_mat.o \
 	d_mat.o \
+	mpfr_mat.o \
+	F_mpz_mat.o \
 	F_mpz.o \
+	F_mpz_LLL_fast_d.o \
+	F_mpz_LLL_heuristic_mpfr.o \
 	F_mpz_poly.o \
 	tinyQS.o \
 	factor_base.o \
@@ -123,7 +133,7 @@ QS: mpQS
 
 tune: ZmodF_mul-tune mpz_poly-tune 
 
-test: F_mpz-test mpn_extras-test fmpz_poly-test fmpz-test ZmodF-test ZmodF_poly-test mpz_poly-test ZmodF_mul-test long_extras-test zmod_poly-test zmod_mat-test
+test: F_mpz-test mpn_extras-test fmpz_poly-test fmpz-test ZmodF-test ZmodF_poly-test mpz_poly-test ZmodF_mul-test long_extras-test zmod_poly-test F_mpz_mat-test zmod_mat-test
 
 check: test
 	./F_mpz-test
@@ -137,6 +147,7 @@ check: test
 	./zmod_poly-test
 	./zmod_mat-test
 	./fmpz_poly-test
+	./F_mpz_mat-test
 
 profile: ZmodF_poly-profile kara-profile fmpz_poly-profile mpz_poly-profile ZmodF_mul-profile 
 
@@ -249,6 +260,9 @@ F_mpz_mat.o: F_mpz_mat.c $(HEADERS)
 F_mpz_LLL_fast_d.o: F_mpz_LLL_fast_d.c $(HEADERS)
 	$(CC) $(CFLAGS) -c F_mpz_LLL_fast_d.c -o F_mpz_LLL_fast_d.o
 
+F_mpz_LLL_heuristic_mpfr.o: F_mpz_LLL_heuristic_mpfr.c $(HEADERS)
+	$(CC) $(CFLAGS) -c F_mpz_LLL_heuristic_mpfr.c -o F_mpz_LLL_heuristic_mpfr.o
+
 F_mpz_LLL_HNF.o: F_mpz_LLL_HNF.c $(HEADERS)
 	$(CC) $(CFLAGS) -c F_mpz_LLL_HNF.c -o F_mpz_LLL_HNF.o
 	
@@ -275,6 +289,9 @@ packed_vec.o: packed_vec.c $(HEADERS)
 
 zmod_poly.o: zmod_poly.c $(HEADERS)
 	$(CC) $(CFLAGS) -c zmod_poly.c -o zmod_poly.o
+
+F_mpz_mod_poly.o: F_mpz_mod_poly.c $(HEADERS)
+	$(CC) $(CFLAGS) -c F_mpz_mod_poly.c -o F_mpz_mod_poly.o
 
 NTL-interface.o: NTL-interface.cpp $(HEADERS)
 	$(CPP) $(CFLAGS) -c NTL-interface.cpp -o NTL-interface.o
@@ -344,8 +361,11 @@ zmod_mat-test.o: zmod_mat-test.c
 F_zmod_mat-test.o: F_zmod_mat-test.c
 	$(CC) $(CFLAGS) -c F_zmod_mat-test.c -o F_zmod_mat-test.o
 
-f_mpz_poly-test.o: F_mpz_poly-test.c
+F_mpz_poly-test.o: F_mpz_poly-test.c
 	$(CC) $(CFLAGS) -c F_mpz_poly-test.c -o F_mpz_poly-test.o
+
+F_mpz_mod_poly-test.o: F_mpz_mod_poly-test.c
+	$(CC) $(CFLAGS) -c F_mpz_mod_poly-test.c -o F_mpz_mod_poly-test.o
 
 NTL-interface-test.o: NTL-interface-test.cpp
 	$(CPP) $(CFLAGS) -c NTL-interface-test.cpp -o NTL-interface-test.o
@@ -399,6 +419,9 @@ F_zmod_mat-test: F_zmod_mat-test.o test-support.o $(FLINTOBJ) $(HEADERS)
 
 F_mpz_poly-test: F_mpz_poly-test.o test-support.o $(FLINTOBJ) $(HEADERS)
 	$(CC) $(CFLAGS) F_mpz_poly-test.o test-support.o -o F_mpz_poly-test $(FLINTOBJ) $(LIBS)
+
+F_mpz_mod_poly-test: F_mpz_mod_poly-test.o test-support.o $(FLINTOBJ) $(HEADERS)
+	$(CC) $(CFLAGS) F_mpz_mod_poly-test.o test-support.o -o F_mpz_mod_poly-test $(FLINTOBJ) $(LIBS)
 
 NTL-interface-test: NTL-interface.o NTL-interface-test.o test-support.o $(FLINTOBJ) $(HEADERS)
 	$(CPP) $(CFLAGS) NTL-interface-test.o NTL-interface.o test-support.o $(FLINTOBJ) -o NTL-interface-test $(LIBS2)

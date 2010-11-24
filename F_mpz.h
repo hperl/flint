@@ -33,9 +33,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <gmp.h>
+#include <mpfr.h>
 #include "flint.h"
 #include "mpn_extras.h"
 #include "zn_poly/src/zn_poly.h"
+
 
 /* 
    F_mpz_t type
@@ -270,6 +272,26 @@ double F_mpz_get_d_2exp(long * exp, const F_mpz_t f);
 void F_mpz_set_mpz(F_mpz_t f, const mpz_t x);
 
 /** 
+   \fn     void F_mpz_get_mpfr(mpfr_t x, const F_mpz_t f)
+   \brief  Returns f as an mpfr_t to the current precision of x, 
+           rounded down if necessary.
+*/
+void F_mpz_get_mpfr(mpfr_t x, const F_mpz_t f);
+
+/** 
+   \fn     void F_mpz_set_mpfr(F_mpz_t f, const mpfr_t x)
+   \brief  Set the f to the value of the mpfr_t x, rounded down.
+*/
+void F_mpz_set_mpfr(F_mpz_t f, const mpfr_t x);
+
+/** 
+   \fn     int F_mpz_set_mpfr_2exp(const F_mpz_t f, const mpfr_t x)
+   \brief  Set the f to the stored mantissa of the mpfr_t x and return
+           an exponent exp so that x = f*2^exp.
+*/
+int F_mpz_set_mpfr_2exp(F_mpz_t f, const mpfr_t x);
+
+/** 
    \fn     void F_mpz_set_limbs(F_mpz_t f, const mp_limb_t * x, const ulong limbs)
    \brief  Sets f to the array of limbs x which is the given number of 
 	        limbs in length and where the least significant limb is 
@@ -401,10 +423,8 @@ void F_mpz_print(F_mpz_t x)
 {
 	if (!COEFF_IS_MPZ(*x)) printf("%ld", *x);
 	else 
-	{
-		
-		gmp_printf("%Zd", F_mpz_ptr_mpz(*x));
-		
+	{		
+		gmp_printf("%Zd", F_mpz_ptr_mpz(*x));	
 	}
 }
 
@@ -414,6 +434,13 @@ void F_mpz_print(F_mpz_t x)
 	        integer in decimal format.
 */
 void F_mpz_read(F_mpz_t f);
+
+/** 
+   \fn     void F_mpz_sscanf(F_mpz_t f, const char * str)
+   \brief  Read an F_mpz_t from a string. The integer can be a signed multiprecision
+	        integer in decimal format.
+*/
+void F_mpz_sscanf(F_mpz_t f, const char * str);
 
 /*===============================================================================
 
@@ -581,6 +608,24 @@ void F_mpz_rdiv_q(F_mpz_t f, const F_mpz_t g, const F_mpz_t h);
 */
 void F_mpz_pow_ui(F_mpz_t f, const F_mpz_t g, const ulong exp);
 
+
+/*===============================================================================
+
+	Modular arithmetic
+
+================================================================================*/
+
+/** 
+   \fn     void F_mpz_mulmod2(F_mpz_t f, F_mpz_t g, F_mpz_t h, F_mpz_t p)
+   \brief  Multiply g and h modulo p. Assumes f and p are not aliased.
+*/
+static inline
+void F_mpz_mulmod2(F_mpz_t f, const F_mpz_t g, const F_mpz_t h, const F_mpz_t p)
+{
+   F_mpz_mul2(f, g, h);
+   F_mpz_mod(f, f, p);
+}
+
 /*===============================================================================
 
 	Multimodular routines
@@ -651,6 +696,38 @@ void F_mpz_multi_CRT_ui_unsigned(F_mpz_t output, ulong * residues,
 */
 void F_mpz_multi_CRT_ui(F_mpz_t output, ulong * residues, 
            F_mpz_comb_t comb, F_mpz ** comb_temp, F_mpz_t temp, F_mpz_t temp2);
+
+/*============================================================================
+
+   New and potentially Naive F_mpz functions (no tests)
+
+============================================================================*/
+
+/**
+   A function for finding the integer closest to mant*2^exp, might not be 
+      optimized... not sure in fact... needs testing, but will do for my rough
+      bounds.
+*/
+void F_mpz_set_d_2exp(F_mpz_t output, double mant, long exp);
+
+/**
+   Computes the number in (p/2, p/2] which is equivalent to f mod p.  
+      Calls F_mpz_mod then checks to see if it needs to subtract.  Might be sped up
+      by assuming already reduced mod p...
+*/
+void F_mpz_smod(F_mpz_t res, F_mpz_t f, F_mpz_t p);
+
+/**
+   \fn     long _F_mpz_add_2exp(F_mpz_t res, F_mpz_t x1, long exp1, F_mpz_t x2, long exp2)
+   \brief  Adds x1*2^exp1 + x2*2^exp2 allowing negative exponents returns res*2^long where long = most negative power
+*/
+long _F_mpz_add_2exp(F_mpz_t res, F_mpz_t x1, long exp1, F_mpz_t x2, long exp2);
+
+/**
+   \fn     void F_mpz_2exp_get_mpfr(mpfr_t x, const F_mpz_t f, long exp)
+   \brief  returns an mpfr approx = f * 2^exp
+*/
+void F_mpz_2exp_get_mpfr(mpfr_t x, const F_mpz_t f, long exp);
 
 #ifdef __cplusplus
   }
